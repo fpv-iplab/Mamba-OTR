@@ -23,6 +23,142 @@ def calibrated_average_precision_score(y_true, y_score):
     return cap
 
 
+def interpolated_prec_rec(prec: np.ndarray, rec: np.ndarray) -> float:
+    """Interpolated AP - VOCdevkit from VOC 2011.
+
+    Args:
+        prec (np.ndarray): Precision array.
+        rec (np.ndarray): Recall array.
+
+    Returns:
+        float: Interpolated AP.
+    """
+    
+    mprec = np.hstack([[0], prec, [0]])
+    mrec = np.hstack([[0], rec, [1]])
+    for i in range(len(mprec) - 1)[::-1]:
+        mprec[i] = max(mprec[i], mprec[i + 1])
+    idx = np.where(mrec[1::] != mrec[0:-1])[0] + 1
+    
+    ap = np.sum((mrec[idx] - mrec[idx - 1]) * mprec[idx])
+    return ap
+
+
+def temporal_offset(target_AS: float, candidate_AS: np.ndarray) -> np.ndarray: 
+    """Compute the temporal offset between a target AS and all the test AS.
+    Taken from: https://github.com/rosarioscavo/actionformer_release/blob/main/metric/odas_enigma_clean.py
+
+    Args:
+        target_AS (float): Ground truth action start considered as target.
+        candidate_AS (np.ndarray): Predicted action starts considered as candidates.
+    Returns:
+        np.ndarray: Temporal offset between a target AS and all the test AS.
+    """
+
+    result = np.absolute(candidate_AS - target_AS)
+    return result
+
+
+def compute_point_average_precision(ground_truth: np.ndarray,
+                                    prediction: np.ndarray,
+                                    tOffset_thresholds: np.ndarray,
+                                    fps: float = 4.0) -> np.ndarray:
+    """Compute average precision (detection task) between ground truth and
+    predictions. If multiple predictions occurs for the same
+    predicted segment, only the one with smallest offset is matches as
+    true positive.
+    Inspired by: https://github.com/rosarioscavo/actionformer_release/blob/main/metric/odas_enigma_clean.py
+
+    Args:
+        ground_truth (np.ndarray): Ground truth of action starts.
+        prediction (np.ndarray): Predictions of action starts.
+        tOffset_thresholds (np.ndarray): Temporal offset thresholds in seconds.
+        fps (float): Frame rate of the video.
+
+    Returns:
+        np.ndarray: Average precision score for each tOffset_threshold.
+    """
+
+    tOffset_thresholds = tOffset_thresholds * fps
+
+    num_pos = float(len(ground_truth))
+    size = (len(tOffset_thresholds), len(prediction))
+    lock_gt = np.ones((len(tOffset_thresholds), len(ground_truth))) * -1
+
+    tp = np.zeros(size)
+    fp = np.zeros(size)
+    prediction = prediction.argsort(axis=0)[::-1]
+
+    for idx, this_pred in enumerate(prediction):
+        t_off = temporal_offset(this_pred, ground_truth)
+        t_off_sorted_idx = t_off.argsort()
+
+        for tidx, toff_thr in enumerate(tOffset_thresholds):
+            for jdx in t_off_sorted_idx:
+                if t_off[jdx] > toff_thr:
+                    fp[tidx, idx] = 1
+                    break
+
+                if lock_gt[tidx, jdx] >= 0:
+                    continue
+
+                tp[tidx, idx] = 1
+                lock_gt[tidx, jdx] = idx
+                break
+
+            if fp[tidx, idx] == 0 and tp[tidx, idx] == 0:
+                fp[tidx, idx] = 1
+
+    tp_cumsum = np.cumsum(tp, axis=1).astype(float)
+    fp_cumsum = np.cumsum(fp, axis=1).astype(float)
+
+    recall_cumsum = tp_cumsum / num_pos
+    precision_cumsum = tp_cumsum / (tp_cumsum + fp_cumsum)
+
+    ap = np.zeros(len(tOffset_thresholds))
+    for tidx in range(len(tOffset_thresholds)):
+        ap[tidx] = interpolated_prec_rec(precision_cumsum[tidx,:], recall_cumsum[tidx,:])
+    return ap
+
+
+def perpoint_average_precision(ground_truth,
+                               prediction,
+                               class_names,
+                               ignore_index,
+                               metrics,
+                               postprocessing):
+    """Compute (point-level) average precision between ground truth and
+    predictions data frames.
+    """
+    result = OrderedDict()
+    prediction = np.array(prediction)
+    ground_truth = np.array(ground_truth)
+    tOffset_thresholds = np.linspace(1.0, 10.0, 10)
+
+    # Postprocessing
+    if postprocessing is not None:
+        ground_truth, prediction = postprocessing(ground_truth, prediction)
+
+    # Build metrics (Only point average precision is supported)
+    if metrics == "pAP":
+        compute_score = compute_point_average_precision
+    else:
+        raise RuntimeError('Unknown metrics: {}'.format(metrics))
+
+    # Ignore backgroud class
+    ignore_index = set([0, ignore_index])
+
+    result['perclass_p_mAP'] = OrderedDict()
+    for idx, class_name in enumerate(class_names):
+        if idx not in ignore_index:
+            result['perclass_p_mAP'][class_name] = compute_score(
+                ground_truth[:, idx], prediction[:, idx], tOffset_thresholds)
+    
+    result["perclass_p_map"] = np.mean(list(result['perclass_p_mAP'].values()), axis=0)
+    result["mp_map"] = np.mean(result["perclass_p_map"])
+    return result
+
+
 def perframe_average_precision(ground_truth,
                                prediction,
                                class_names,

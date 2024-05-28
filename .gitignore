@@ -227,3 +227,4 @@ cython_debug/
 # Own
 checkpoints/*
 temp.ipynb
+default_launch.yaml

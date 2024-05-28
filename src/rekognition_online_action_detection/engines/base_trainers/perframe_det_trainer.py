@@ -132,7 +132,7 @@ def do_perframe_det_train(cfg,
             ))
         if 'test' in cfg.SOLVER.PHASES:
             # Compute result
-            det_result = compute_result['perframe'](
+            det_result = compute_result[cfg.EVALUATION.METHOD](
                 cfg,
                 det_gt_targets,
                 det_pred_scores,

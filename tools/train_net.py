@@ -13,7 +13,7 @@ from rekognition_online_action_detection.optimizers import build_scheduler
 from rekognition_online_action_detection.engines import do_train
 
 
-def main(cfg):
+def train(cfg):
     # Setup configurations
     device = setup_environment(cfg)
     checkpointer = setup_checkpointer(cfg, phase='train')
@@ -55,4 +55,4 @@ def main(cfg):
 
 
 if __name__ == '__main__':
-    main(load_cfg())
+    train(load_cfg())
