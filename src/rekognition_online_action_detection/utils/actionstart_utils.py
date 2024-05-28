@@ -14,5 +14,9 @@ def thumos_target_perframe_to_actionstart(featPath: str, outputPath: str):
                         continue
                     while k < data.shape[0] - 1 and data[k, j] == 1 and data[k + 1, j] == 1:
                         data[k, j] = 0
+                        data[k, 0] = 1 #! set middle frames of action as background
                         k = k + 1
+                    if k < data.shape[0] - 1 and data[k, j] == 1 and data[k + 1, j] == 0: # remove frame of end action
+                        data[k, j] = 0
+                        data[k, 0] = 1 #! count as background
         np.save(os.path.join(outputPath, file), data)
