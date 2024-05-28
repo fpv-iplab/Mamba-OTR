@@ -9,7 +9,7 @@ from rekognition_online_action_detection.models import build_model
 from rekognition_online_action_detection.engines import do_inference
 
 
-def main(cfg):
+def test(cfg):
     # Setup configurations
     device = setup_environment(cfg)
     checkpointer = setup_checkpointer(cfg, phase='test')
@@ -30,4 +30,4 @@ def main(cfg):
 
 
 if __name__ == '__main__':
-    main(load_cfg())
+    test(load_cfg())
