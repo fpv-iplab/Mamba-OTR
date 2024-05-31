@@ -119,7 +119,7 @@ def point_average_precision(ground_truth: np.ndarray,
     ap = np.zeros(len(tOffset_thresholds))
     for tidx in range(len(tOffset_thresholds)):
         ap[tidx] = interpolated_prec_rec(precision_cumsum[tidx,:], recall_cumsum[tidx,:])
-    return ap
+    return ap.mean()
 
 
 
