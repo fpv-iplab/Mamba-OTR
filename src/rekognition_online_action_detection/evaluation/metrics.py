@@ -83,11 +83,12 @@ def compute_point_average_precision(ground_truth: np.ndarray,
 
     num_pos = float(len(ground_truth))
     size = (len(tOffset_thresholds), len(prediction))
-    lock_gt = np.ones((len(tOffset_thresholds), len(ground_truth))) * -1
+    lock_gt = np.fill((len(tOffset_thresholds), len(ground_truth)), -1)
 
     tp = np.zeros(size)
     fp = np.zeros(size)
-    prediction = prediction.argsort(axis=0)[::-1]
+    pred_idx = prediction.argsort(axis=0)[::-1]
+    prediction = prediction[pred_idx]
 
     for idx, this_pred in enumerate(prediction):
         t_off = temporal_offset(this_pred, ground_truth)
