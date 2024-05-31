@@ -59,7 +59,7 @@ def temporal_offset(target_AS: float, candidate_AS: np.ndarray) -> np.ndarray:
     return result
 
 
-def compute_point_average_precision(ground_truth: np.ndarray,
+def point_average_precision(ground_truth: np.ndarray,
                                     prediction: np.ndarray,
                                     tOffset_thresholds: np.ndarray,
                                     fps: float = 4.0) -> np.ndarray:
@@ -122,43 +122,6 @@ def compute_point_average_precision(ground_truth: np.ndarray,
     return ap
 
 
-def perpoint_average_precision(ground_truth,
-                               prediction,
-                               class_names,
-                               ignore_index,
-                               metrics,
-                               postprocessing):
-    """Compute (point-level) average precision between ground truth and
-    predictions data frames.
-    """
-    result = OrderedDict()
-    prediction = np.array(prediction)
-    ground_truth = np.array(ground_truth)
-    tOffset_thresholds = np.linspace(1.0, 10.0, 10)
-
-    # Postprocessing
-    if postprocessing is not None:
-        ground_truth, prediction = postprocessing(ground_truth, prediction)
-
-    # Build metrics (Only point average precision is supported)
-    if metrics == "pAP":
-        compute_score = compute_point_average_precision
-    else:
-        raise RuntimeError('Unknown metrics: {}'.format(metrics))
-
-    # Ignore backgroud class
-    ignore_index = set([0, ignore_index])
-
-    result['perclass_p_mAP'] = OrderedDict()
-    for idx, class_name in enumerate(class_names):
-        if idx not in ignore_index:
-            result['perclass_p_mAP'][class_name] = compute_score(
-                ground_truth[:, idx], prediction[:, idx], tOffset_thresholds)
-    
-    result["perclass_p_map"] = np.mean(list(result['perclass_p_mAP'].values()), axis=0)
-    result["mp_map"] = np.mean(result["perclass_p_map"])
-    return result
-
 
 def perframe_average_precision(ground_truth,
                                prediction,
@@ -172,6 +135,7 @@ def perframe_average_precision(ground_truth,
     result = OrderedDict()
     ground_truth = np.array(ground_truth)
     prediction = np.array(prediction)
+    tOffset_thresholds = np.linspace(1.0, 10.0, 10)
 
     # Postprocessing
     if postprocessing is not None:
@@ -182,6 +146,8 @@ def perframe_average_precision(ground_truth,
         compute_score = average_precision_score
     elif metrics == 'cAP':
         compute_score = calibrated_average_precision_score
+    elif metrics == 'pAP':
+        compute_score = point_average_precision
     else:
         raise RuntimeError('Unknown metrics: {}'.format(metrics))
 
@@ -193,8 +159,12 @@ def perframe_average_precision(ground_truth,
     for idx, class_name in enumerate(class_names):
         if idx not in ignore_index:
             if np.any(ground_truth[:, idx]):
-                result['per_class_AP'][class_name] = compute_score(
-                    ground_truth[:, idx], prediction[:, idx])
+                if metrics == 'pAP':
+                    result['per_class_AP'][class_name] = compute_score(
+                        ground_truth[:, idx], prediction[:, idx], tOffset_thresholds)
+                else:
+                    result['per_class_AP'][class_name] = compute_score(
+                        ground_truth[:, idx], prediction[:, idx])
     result['mean_AP'] = np.mean(list(result['per_class_AP'].values()))
 
     return result
