@@ -83,7 +83,7 @@ def point_average_precision(ground_truth: np.ndarray,
 
     num_pos = float(len(ground_truth))
     size = (len(tOffset_thresholds), len(prediction))
-    lock_gt = np.fill((len(tOffset_thresholds), len(ground_truth)), -1)
+    lock_gt = np.full((len(tOffset_thresholds), len(ground_truth)), -1)
 
     tp = np.zeros(size)
     fp = np.zeros(size)
