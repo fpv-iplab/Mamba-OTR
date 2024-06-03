@@ -122,6 +122,21 @@ def point_average_precision(ground_truth: np.ndarray,
     return ap.mean()
 
 
+def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
+    """Convert action start frame to timestamp.
+
+    Args:
+        data (np.ndarray): Action start frame.
+
+    Returns:
+        np.ndarray: Action start timestamp.
+    """
+    timestamp = []
+    for i in range(len(data)):
+        if data[i] != 0:
+            timestamp.append(i)
+    return np.array(timestamp)
+
 
 def perframe_average_precision(ground_truth,
                                prediction,
@@ -160,8 +175,9 @@ def perframe_average_precision(ground_truth,
         if idx not in ignore_index:
             if np.any(ground_truth[:, idx]):
                 if metrics == 'pAP':
+                    gt = convert_to_timestamp(ground_truth[:, idx])
                     result['per_class_AP'][class_name] = compute_score(
-                        ground_truth[:, idx], prediction[:, idx], tOffset_thresholds)
+                        gt, prediction[:, idx], tOffset_thresholds)
                 else:
                     result['per_class_AP'][class_name] = compute_score(
                         ground_truth[:, idx], prediction[:, idx])
