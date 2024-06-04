@@ -131,10 +131,7 @@ def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Action start timestamp.
     """
-    timestamp = []
-    for i in range(len(data)):
-        if data[i] != 0:
-            timestamp.append(i)
+    timestamp = [i for i in range(len(data)) if data[i] != 0] #! != 0, no threshold applied. Future work available
     return np.array(timestamp)
 
 
