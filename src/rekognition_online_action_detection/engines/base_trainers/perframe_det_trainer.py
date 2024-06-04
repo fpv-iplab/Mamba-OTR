@@ -137,10 +137,16 @@ def do_perframe_det_train(cfg,
                 det_gt_targets,
                 det_pred_scores,
             )
-            log.append('test det_loss: {:.5f} det_mAP: {:.5f}'.format(
-                det_losses['test'] / len(data_loaders['test'].dataset),
-                det_result['mean_AP'],
-            ))
+            if cfg.DATA.METRICS == "pAP":
+                log.append('test det_loss: {:.5f} det_mp_mAP: {:.5f}'.format(
+                    det_losses['test'] / len(data_loaders['test'].dataset),
+                    det_result['mp_mAP'],
+                ))
+            else:
+                log.append('test det_loss: {:.5f} det_mAP: {:.5f}'.format(
+                    det_losses['test'] / len(data_loaders['test'].dataset),
+                    det_result['mean_AP'],
+                ))
             if cfg.MODEL.LSTR.V_N_CLASSIFIER:
                 log.append('test verb_loss: {:.5f}'.format(
                     verb_losses['test'] / len(data_loaders['test'].dataset),

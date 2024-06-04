@@ -81,6 +81,10 @@ def point_average_precision(ground_truth: np.ndarray,
 
     tOffset_thresholds = tOffset_thresholds * fps
 
+    ap = np.zeros(len(tOffset_thresholds))
+    if prediction.shape[0] == 0:
+        return ap
+
     num_pos = float(len(ground_truth))
     size = (len(tOffset_thresholds), len(prediction))
     lock_gt = np.full((len(tOffset_thresholds), len(ground_truth)), -1)
@@ -116,10 +120,9 @@ def point_average_precision(ground_truth: np.ndarray,
     recall_cumsum = tp_cumsum / num_pos
     precision_cumsum = tp_cumsum / (tp_cumsum + fp_cumsum)
 
-    ap = np.zeros(len(tOffset_thresholds))
     for tidx in range(len(tOffset_thresholds)):
         ap[tidx] = interpolated_prec_rec(precision_cumsum[tidx,:], recall_cumsum[tidx,:])
-    return ap.mean()
+    return ap
 
 
 def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
@@ -131,11 +134,24 @@ def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Action start timestamp.
     """
-    timestamp = []
-    for i in range(len(data)):
-        if data[i] != 0:
-            timestamp.append(i)
+    timestamp = [i for i in range(len(data)) if data[i] != 0] #! != 0, no threshold applied. Future work available
     return np.array(timestamp)
+
+
+def preprocess_pred(data: np.ndarray, threshold: float) -> np.ndarray:
+    """Preprocess prediction data. Applies thresholding to remove low
+    confidence predictions and convert to timestamp.
+
+    Args:
+        data (np.ndarray): Prediction data.
+        threshold (float): Threshold value.
+
+    Returns:
+        np.ndarray: Preprocessed prediction data.
+    """
+    pred = np.where(data > threshold, data, 0)
+    return convert_to_timestamp(pred)
+
 
 
 def perframe_average_precision(ground_truth,
@@ -176,12 +192,20 @@ def perframe_average_precision(ground_truth,
             if np.any(ground_truth[:, idx]):
                 if metrics == 'pAP':
                     gt = convert_to_timestamp(ground_truth[:, idx])
+                    pred = preprocess_pred(prediction[:, idx], threshold=0.005) #! Fixed threshold value for 
+                                                                                #! "timestamp regression" emulation
+
                     result['per_class_AP'][class_name] = compute_score(
-                        gt, prediction[:, idx], tOffset_thresholds)
+                        gt, pred, tOffset_thresholds)
                 else:
                     result['per_class_AP'][class_name] = compute_score(
                         ground_truth[:, idx], prediction[:, idx])
-    result['mean_AP'] = np.mean(list(result['per_class_AP'].values()))
+
+    if metrics == 'pAP':
+        result["p_mAP"] = np.mean(list(result['per_class_AP'].values()), axis=1)
+        result["mp_mAP"] = np.mean(result["p_mAP"])
+    else:
+        result['mean_AP'] = np.mean(list(result['per_class_AP'].values()))
 
     return result
 
