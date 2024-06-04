@@ -135,6 +135,22 @@ def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
     return np.array(timestamp)
 
 
+def preprocess_pred(data: np.ndarray, threshold: float) -> np.ndarray:
+    """Preprocess prediction data. Applies thresholding to remove low
+    confidence predictions and convert to timestamp.
+
+    Args:
+        data (np.ndarray): Prediction data.
+        threshold (float): Threshold value.
+
+    Returns:
+        np.ndarray: Preprocessed prediction data.
+    """
+    pred = np.where(data > threshold, data, 0)
+    return convert_to_timestamp(pred)
+
+
+
 def perframe_average_precision(ground_truth,
                                prediction,
                                class_names,
@@ -173,6 +189,9 @@ def perframe_average_precision(ground_truth,
             if np.any(ground_truth[:, idx]):
                 if metrics == 'pAP':
                     gt = convert_to_timestamp(ground_truth[:, idx])
+                    pred = preprocess_pred(prediction[:, idx], threshold=0.005) #! Fixed threshold value for 
+                                                                                #! "timestamp regression" emulation
+
                     result['per_class_AP'][class_name] = compute_score(
                         gt, prediction[:, idx], tOffset_thresholds)
                 else:
