@@ -199,7 +199,6 @@ class FocalLoss(nn.Module):
         self.gamma = gamma
         self.reduction = reduction
 
-        assert ignore_index == 0
         self.ignore_index = ignore_index
 
 
@@ -234,7 +233,7 @@ class FocalLoss(nn.Module):
         targets = targets.float()
 
         notice_index = [i for i in range(targets.shape[-1]) if i != self.ignore_index]
-        input = input[:, notice_index]
+        inputs = inputs[:, notice_index]
         targets = targets[:, notice_index]
 
         p = torch.sigmoid(inputs)
