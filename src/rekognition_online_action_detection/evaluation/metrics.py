@@ -81,6 +81,10 @@ def point_average_precision(ground_truth: np.ndarray,
 
     tOffset_thresholds = tOffset_thresholds * fps
 
+    ap = np.zeros(len(tOffset_thresholds))
+    if prediction.shape[0] == 0:
+        return ap
+
     num_pos = float(len(ground_truth))
     size = (len(tOffset_thresholds), len(prediction))
     lock_gt = np.full((len(tOffset_thresholds), len(ground_truth)), -1)
@@ -116,10 +120,9 @@ def point_average_precision(ground_truth: np.ndarray,
     recall_cumsum = tp_cumsum / num_pos
     precision_cumsum = tp_cumsum / (tp_cumsum + fp_cumsum)
 
-    ap = np.zeros(len(tOffset_thresholds))
     for tidx in range(len(tOffset_thresholds)):
         ap[tidx] = interpolated_prec_rec(precision_cumsum[tidx,:], recall_cumsum[tidx,:])
-    return ap.mean()
+    return ap
 
 
 def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
@@ -193,11 +196,16 @@ def perframe_average_precision(ground_truth,
                                                                                 #! "timestamp regression" emulation
 
                     result['per_class_AP'][class_name] = compute_score(
-                        gt, prediction[:, idx], tOffset_thresholds)
+                        gt, pred, tOffset_thresholds)
                 else:
                     result['per_class_AP'][class_name] = compute_score(
                         ground_truth[:, idx], prediction[:, idx])
-    result['mean_AP'] = np.mean(list(result['per_class_AP'].values()))
+
+    if metrics == 'pAP':
+        result["p_mAP"] = np.mean(list(result['per_class_AP'].values()), axis=1)
+        result["mp_mAP"] = np.mean(result["p_mAP"])
+    else:
+        result['mean_AP'] = np.mean(list(result['per_class_AP'].values()))
 
     return result
 
