@@ -60,9 +60,9 @@ def temporal_offset(target_AS: float, candidate_AS: np.ndarray) -> np.ndarray:
 
 
 def point_average_precision(ground_truth: np.ndarray,
-                                    prediction: np.ndarray,
-                                    tOffset_thresholds: np.ndarray,
-                                    fps: float = 4.0) -> np.ndarray:
+                            prediction: np.ndarray,
+                            tOffset_thresholds: np.ndarray,
+                            fps: float = 4.0) -> np.ndarray:
     """Compute average precision (detection task) between ground truth and
     predictions. If multiple predictions occurs for the same
     predicted segment, only the one with smallest offset is matches as
@@ -70,17 +70,14 @@ def point_average_precision(ground_truth: np.ndarray,
     Inspired by: https://github.com/rosarioscavo/actionformer_release/blob/main/metric/odas_enigma_clean.py
 
     Args:
-        ground_truth (np.ndarray): Ground truth of action starts.
-        prediction (np.ndarray): Predictions of action starts.
+        ground_truth (np.ndarray): Ground truth of actiona.
+        prediction (np.ndarray): Predictions of actions.
         tOffset_thresholds (np.ndarray): Temporal offset thresholds in seconds.
         fps (float): Frame rate of the video.
 
     Returns:
         np.ndarray: Average precision score for each tOffset_threshold.
     """
-
-    tOffset_thresholds = tOffset_thresholds * fps
-
     ap = np.zeros(len(tOffset_thresholds))
     if prediction.shape[0] == 0:
         return ap
@@ -125,17 +122,19 @@ def point_average_precision(ground_truth: np.ndarray,
     return ap
 
 
-def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
-    """Convert action start frame to timestamp.
+def convert_to_timestamp(data: np.ndarray, fps: float = 4.0) -> np.ndarray:
+    """Convert action frame to timestamp.
 
     Args:
-        data (np.ndarray): Action start frame.
+        data (np.ndarray): Action frames.
+        fps (float): Frame rate of the video.
 
     Returns:
-        np.ndarray: Action start timestamp.
+        np.ndarray: Action timestamp.
     """
-    timestamp = [i for i in range(len(data)) if data[i] != 0] #! != 0, no threshold applied. Future work available
-    return np.array(timestamp)
+    timestamp = [i for i in range(len(data)) if data[i] > 0.5] #! > 0.5, fixed threshold applied. Future work available
+    timestamp = np.array(timestamp) / fps
+    return timestamp
 
 
 def preprocess_pred(data: np.ndarray, threshold: float) -> np.ndarray:
@@ -144,7 +143,7 @@ def preprocess_pred(data: np.ndarray, threshold: float) -> np.ndarray:
 
     Args:
         data (np.ndarray): Prediction data.
-        threshold (float): Threshold value.
+        threshold (float): Very small threshold value to remove very low confidence predictions.
 
     Returns:
         np.ndarray: Preprocessed prediction data.
