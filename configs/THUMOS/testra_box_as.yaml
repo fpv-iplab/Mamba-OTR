@@ -44,3 +44,4 @@ SOLVER:
     WARMUP_FACTOR: 0.3
     WARMUP_EPOCHS: 10.0
     WARMUP_METHOD: 'linear'
+OUTPUT_DIR: 'ckpt'
