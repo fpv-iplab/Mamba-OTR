@@ -78,6 +78,8 @@ def point_average_precision(ground_truth: np.ndarray,
     Returns:
         np.ndarray: Average precision score for each tOffset_threshold.
     """
+    tOffset_thresholds = tOffset_thresholds * fps
+
     ap = np.zeros(len(tOffset_thresholds))
     if prediction.shape[0] == 0:
         return ap
@@ -122,19 +124,17 @@ def point_average_precision(ground_truth: np.ndarray,
     return ap
 
 
-def convert_to_timestamp(data: np.ndarray, fps: float = 4.0) -> np.ndarray:
+def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
     """Convert action frame to timestamp.
 
     Args:
         data (np.ndarray): Action frames.
-        fps (float): Frame rate of the video.
 
     Returns:
         np.ndarray: Action timestamp.
     """
     timestamp = [i for i in range(len(data)) if data[i] > 0.5] #! > 0.5, fixed threshold applied. Future work available
-    timestamp = np.array(timestamp) / fps
-    return timestamp
+    return np.array(timestamp)
 
 
 def preprocess_pred(data: np.ndarray, threshold: float) -> np.ndarray:
