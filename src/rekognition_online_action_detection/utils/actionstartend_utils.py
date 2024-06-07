@@ -33,4 +33,4 @@ def thumos_target_perframe_to_actionstartend(featPath: str, outputPath: str, typ
                             data[k, 0] = 1 #! count as background
 
         with open(os.path.join(outputPath, file), "wb") as f:
-            np.save(os.path.join(outputPath, file), data)
+            np.save(f, data)
