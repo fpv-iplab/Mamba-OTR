@@ -71,6 +71,7 @@ _C.MODEL.LSTR.FC_NORM = False
 _C.MODEL.LSTR.INFERENCE_MODE = 'batch'
 # Position Embedding
 # _C.MODEL.LSTR.POSITION_EMBEDDING = 'default'
+_C.MODEL.FRAME_DELTA = 0
 
 # ---------------------------------------------------------------------------- #
 # Criterion
