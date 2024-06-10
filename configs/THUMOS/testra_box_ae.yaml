@@ -30,6 +30,7 @@ MODEL:
     ]
     DEC_MODULE: [-1, 2, True]
   CRITERIONS: [['MCE', {}]]
+  FRAME_DELTA: 3
 DATA_LOADER:
   BATCH_SIZE: 16
   NUM_WORKERS: 8

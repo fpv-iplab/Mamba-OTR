@@ -10,6 +10,24 @@ import torch.nn as nn
 from rekognition_online_action_detection.evaluation import compute_result
 
 
+
+def preprocess_end_label(data, delta=3):
+    for b in range(data.shape[0]):
+        for i in range(data.shape[1]):
+            for j in range(1, data.shape[2]):
+                if data[b, i, j] == 1:
+                    k = i
+                    count = 0
+                    while k > 0 and data[b, k, j] == 1 and data[b, k - 1, j] == 0 and count < delta:
+                        data[b, k - 1, j] = 1
+                        data[b, k - 1, 0] = 0
+
+                        k = k - 1
+                        count = count + 1
+    return data
+
+
+
 def do_perframe_det_train(cfg,
                           data_loaders,
                           model,
@@ -48,7 +66,11 @@ def do_perframe_det_train(cfg,
                         verb_target = verb_target.to(device)
                         noun_target = noun_target.to(device)
                     else:
-                        det_target = data[-1].to(device)
+                        if training:
+                            det_target = preprocess_end_label(data[-1], cfg.MODEL.FRAME_DELTA)
+                            det_target = det_target.to(device)
+                        else:
+                            det_target = data[-1].to(device)
 
                     loss_names = list(zip(*cfg.MODEL.CRITERIONS))[0]
                     if 'PRED_FUTURE' in list(zip(*cfg.MODEL.CRITERIONS))[0]:
