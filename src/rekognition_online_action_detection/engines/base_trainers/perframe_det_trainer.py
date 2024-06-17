@@ -183,7 +183,7 @@ def do_perframe_det_train(cfg,
 
         # Save checkpoint for model and optimizer
         if epoch % cfg.SOLVER.SAVE_EVERY == 0:
-            checkpointer.save(epoch, model, optimizer)
+            checkpointer.save(epoch, model, optimizer, det_result['mp_mAP'])
 
         # Shuffle dataset for next epoch
         data_loaders['train'].dataset.shuffle()
