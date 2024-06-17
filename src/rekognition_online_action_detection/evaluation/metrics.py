@@ -61,8 +61,7 @@ def temporal_offset(target_AS: float, candidate_AS: np.ndarray) -> np.ndarray:
 
 def point_average_precision(ground_truth: np.ndarray,
                             prediction: np.ndarray,
-                            tOffset_thresholds: np.ndarray,
-                            fps: float = 4.0) -> np.ndarray:
+                            tOffset_thresholds: np.ndarray) -> np.ndarray:
     """Compute average precision (detection task) between ground truth and
     predictions. If multiple predictions occurs for the same
     predicted segment, only the one with smallest offset is matches as
@@ -73,13 +72,10 @@ def point_average_precision(ground_truth: np.ndarray,
         ground_truth (np.ndarray): Ground truth of actiona.
         prediction (np.ndarray): Predictions of actions.
         tOffset_thresholds (np.ndarray): Temporal offset thresholds in seconds.
-        fps (float): Frame rate of the video.
 
     Returns:
         np.ndarray: Average precision score for each tOffset_threshold.
     """
-    tOffset_thresholds = tOffset_thresholds * fps
-
     ap = np.zeros(len(tOffset_thresholds))
     if prediction.shape[0] == 0:
         return ap
@@ -124,7 +120,7 @@ def point_average_precision(ground_truth: np.ndarray,
     return ap
 
 
-def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
+def convert_to_timestamp(data: np.ndarray, fps: float = 4.0) -> np.ndarray:
     """Convert action frame to timestamp.
 
     Args:
@@ -134,10 +130,10 @@ def convert_to_timestamp(data: np.ndarray) -> np.ndarray:
         np.ndarray: Action timestamp.
     """
     timestamp = [i for i in range(len(data)) if data[i] > 0.5] #! > 0.5, fixed threshold applied. Future work available
-    return np.array(timestamp)
+    return np.array(timestamp) / fps
 
 
-def preprocess_pred(data: np.ndarray, threshold: float) -> np.ndarray:
+def preprocess_pred(data: np.ndarray, threshold: float, fps: float = 4.0) -> np.ndarray:
     """Preprocess prediction data. Applies thresholding to remove low
     confidence predictions and convert to timestamp.
 
@@ -149,7 +145,7 @@ def preprocess_pred(data: np.ndarray, threshold: float) -> np.ndarray:
         np.ndarray: Preprocessed prediction data.
     """
     pred = np.where(data > threshold, data, 0)
-    return convert_to_timestamp(pred)
+    return convert_to_timestamp(pred, fps)
 
 
 
@@ -190,9 +186,9 @@ def perframe_average_precision(ground_truth,
         if idx not in ignore_index:
             if np.any(ground_truth[:, idx]):
                 if metrics == 'pAP':
-                    gt = convert_to_timestamp(ground_truth[:, idx])
-                    pred = preprocess_pred(prediction[:, idx], threshold=0.005) #! Fixed threshold value for 
-                                                                                #! "timestamp regression" emulation
+                    gt = convert_to_timestamp(ground_truth[:, idx], fps=4.0)
+                    pred = preprocess_pred(prediction[:, idx], threshold=0.005, fps=4.0) #! Fixed threshold value for 
+                                                                                        #! "timestamp regression" emulation
 
                     result['per_class_AP'][class_name] = compute_score(
                         gt, pred, tOffset_thresholds)
