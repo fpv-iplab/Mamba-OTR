@@ -125,12 +125,12 @@ def convert_to_timestamp(data: np.ndarray, fps: float = 4.0) -> np.ndarray:
 
     Args:
         data (np.ndarray): Action frames.
+        fps (float): Frame per second.
 
     Returns:
         np.ndarray: Action timestamp.
     """
-    timestamp = [i for i in range(len(data)) if data[i] > 0.5] #! > 0.5, fixed threshold applied. Future work available
-    return np.array(timestamp) / fps
+    return np.where(data == 1)[0] / fps
 
 
 def preprocess_pred(data: np.ndarray, threshold: float, fps: float = 4.0) -> np.ndarray:
@@ -144,7 +144,7 @@ def preprocess_pred(data: np.ndarray, threshold: float, fps: float = 4.0) -> np.
     Returns:
         np.ndarray: Preprocessed prediction data.
     """
-    pred = np.where(data > threshold, data, 0)
+    pred = np.where(data >= threshold, 1, 0)
     return convert_to_timestamp(pred, fps)
 
 
