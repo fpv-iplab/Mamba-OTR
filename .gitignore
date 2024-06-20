@@ -228,5 +228,5 @@ cython_debug/
 # Own
 checkpoints/*
 ckpt/*
-temp.ipynb
 default_launch.yaml
+.USE/*
