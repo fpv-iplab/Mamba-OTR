@@ -186,12 +186,15 @@ def perframe_average_precision(ground_truth,
         if idx not in ignore_index:
             if np.any(ground_truth[:, idx]):
                 if metrics == 'pAP':
-                    gt = convert_to_timestamp(ground_truth[:, idx], fps=4.0)
-                    pred = preprocess_pred(prediction[:, idx], threshold=0.005, fps=4.0) #! Fixed threshold value for 
-                                                                                        #! "timestamp regression" emulation
+                    ths = np.arange(0.5, 0.95, 0.05) # Like COCO mAP
 
-                    result['per_class_AP'][class_name] = compute_score(
-                        gt, pred, tOffset_thresholds)
+                    result['per_class_AP'][class_name] = OrderedDict()
+                    gt = convert_to_timestamp(ground_truth[:, idx], fps=4.0)
+
+                    for th in ths:
+                        pred = preprocess_pred(prediction[:, idx], threshold=th, fps=4.0)
+                        result['per_class_AP'][class_name][str(th)] = compute_score(gt, pred, tOffset_thresholds)
+                    result['per_class_AP'][class_name] = np.mean(list(result['per_class_AP'][class_name].values()), axis=1)
                 else:
                     result['per_class_AP'][class_name] = compute_score(
                         ground_truth[:, idx], prediction[:, idx])
