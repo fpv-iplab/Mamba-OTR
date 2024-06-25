@@ -76,20 +76,22 @@ def point_average_precision(ground_truth: np.ndarray,
     Returns:
         np.ndarray: Average precision score for each tOffset_threshold.
     """
+    
+    pred_ts = prediction["timestamp"]
     ap = np.zeros(len(tOffset_thresholds))
-    if prediction.shape[0] == 0:
+    if pred_ts.shape[0] == 0:
         return ap
 
     num_pos = float(len(ground_truth))
-    size = (len(tOffset_thresholds), len(prediction))
+    size = (len(tOffset_thresholds), len(pred_ts))
     lock_gt = np.full((len(tOffset_thresholds), len(ground_truth)), -1)
 
     tp = np.zeros(size)
     fp = np.zeros(size)
-    pred_idx = prediction.argsort(axis=0)[::-1]
-    prediction = prediction[pred_idx]
+    pred_idx = prediction["score"].argsort(axis=0)[::-1]
+    pred_ts = pred_ts[pred_idx]
 
-    for idx, this_pred in enumerate(prediction):
+    for idx, this_pred in enumerate(pred_ts):
         t_off = temporal_offset(this_pred, ground_truth)
         t_off_sorted_idx = t_off.argsort()
 
@@ -130,10 +132,10 @@ def convert_to_timestamp(data: np.ndarray, fps: float = 4.0) -> np.ndarray:
     Returns:
         np.ndarray: Action timestamp.
     """
-    return np.where(data == 1)[0] / fps
+    return np.where(data != 0)[0] / fps
 
 
-def preprocess_pred(data: np.ndarray, threshold: float, fps: float = 4.0) -> np.ndarray:
+def preprocess_pred(data: np.ndarray, threshold: float = 0.005, fps: float = 4.0) -> np.ndarray:
     """Preprocess prediction data. Applies thresholding to remove low
     confidence predictions and convert to timestamp.
 
@@ -144,8 +146,9 @@ def preprocess_pred(data: np.ndarray, threshold: float, fps: float = 4.0) -> np.
     Returns:
         np.ndarray: Preprocessed prediction data.
     """
-    pred = np.where(data >= threshold, 1, 0)
-    return convert_to_timestamp(pred, fps)
+    pred = np.where(data >= threshold, data, 0)
+    pred = np.delete(pred, np.where(pred == 0))
+    return pred, convert_to_timestamp(pred, fps)
 
 
 
@@ -186,15 +189,11 @@ def perframe_average_precision(ground_truth,
         if idx not in ignore_index:
             if np.any(ground_truth[:, idx]):
                 if metrics == 'pAP':
-                    ths = np.arange(0.5, 0.95, 0.05) # Like COCO mAP
-
-                    result['per_class_AP'][class_name] = OrderedDict()
                     gt = convert_to_timestamp(ground_truth[:, idx], fps=4.0)
 
-                    for th in ths:
-                        pred = preprocess_pred(prediction[:, idx], threshold=th, fps=4.0)
-                        result['per_class_AP'][class_name][str(th)] = compute_score(gt, pred, tOffset_thresholds)
-                    result['per_class_AP'][class_name] = np.mean(list(result['per_class_AP'][class_name].values()), axis=1)
+                    pred = OrderedDict()
+                    pred["score"], pred["timestamp"] = preprocess_pred(prediction[:, idx], threshold=0.005, fps=4.0)
+                    result['per_class_AP'][class_name] = compute_score(gt, pred, tOffset_thresholds)
                 else:
                     result['per_class_AP'][class_name] = compute_score(
                         ground_truth[:, idx], prediction[:, idx])
