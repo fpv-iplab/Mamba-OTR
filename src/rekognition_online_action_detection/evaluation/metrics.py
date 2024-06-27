@@ -60,8 +60,7 @@ def temporal_offset(target_AS: float, candidate_AS: np.ndarray) -> np.ndarray:
 
 
 def point_average_precision(ground_truth: np.ndarray,
-                            prediction: np.ndarray,
-                            tOffset_thresholds: np.ndarray) -> np.ndarray:
+                            prediction: OrderedDict[np.ndarray, np.ndarray]) -> np.ndarray:
     """Compute average precision (detection task) between ground truth and
     predictions. If multiple predictions occurs for the same
     predicted segment, only the one with smallest offset is matches as
@@ -70,7 +69,7 @@ def point_average_precision(ground_truth: np.ndarray,
 
     Args:
         ground_truth (np.ndarray): Ground truth of actiona.
-        prediction (np.ndarray): Predictions of actions.
+        prediction (OrderedDict): Predictions of actions.
         tOffset_thresholds (np.ndarray): Temporal offset thresholds in seconds.
 
     Returns:
