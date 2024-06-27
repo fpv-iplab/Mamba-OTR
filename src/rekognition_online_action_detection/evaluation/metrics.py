@@ -70,7 +70,6 @@ def point_average_precision(ground_truth: np.ndarray,
     Args:
         ground_truth (np.ndarray): Ground truth of actiona.
         prediction (OrderedDict): Predictions of actions.
-        tOffset_thresholds (np.ndarray): Temporal offset thresholds in seconds.
 
     Returns:
         np.ndarray: Average precision score for each tOffset_threshold.
@@ -122,19 +121,6 @@ def point_average_precision(ground_truth: np.ndarray,
     return ap
 
 
-def convert_to_timestamp(data: np.ndarray, fps: float = 4.0) -> np.ndarray:
-    """Convert action frame to timestamp.
-
-    Args:
-        data (np.ndarray): Action frames.
-        fps (float): Frame per second.
-
-    Returns:
-        np.ndarray: Action timestamp.
-    """
-    return np.where(data != 0)[0] / fps
-
-
 def preprocess_pred(data: np.ndarray, threshold: float = 0.005, fps: float = 4.0) -> np.ndarray:
     """Preprocess prediction data. Applies thresholding to remove low
     confidence predictions and convert to timestamp.
@@ -142,6 +128,7 @@ def preprocess_pred(data: np.ndarray, threshold: float = 0.005, fps: float = 4.0
     Args:
         data (np.ndarray): Prediction data.
         threshold (float): Very small threshold value to remove very low confidence predictions.
+        fps (float): Frame rate of the video.
 
     Returns:
         np.ndarray: Preprocessed prediction data.
