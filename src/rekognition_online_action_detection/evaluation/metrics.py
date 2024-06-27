@@ -146,9 +146,14 @@ def preprocess_pred(data: np.ndarray, threshold: float = 0.005, fps: float = 4.0
     Returns:
         np.ndarray: Preprocessed prediction data.
     """
-    pred = np.where(data >= threshold, data, 0)
-    pred = np.delete(pred, np.where(pred == 0))
-    return pred, convert_to_timestamp(pred, fps)
+    pred = OrderedDict()
+    pred["timestamp"] = np.arange(data.shape[0]) / fps
+    pred["score"] = data
+
+    idx = np.where(data > threshold)
+    pred["timestamp"] = pred["timestamp"][idx]
+    pred["score"] = pred["score"][idx]
+    return pred
 
 
 
@@ -189,10 +194,9 @@ def perframe_average_precision(ground_truth,
         if idx not in ignore_index:
             if np.any(ground_truth[:, idx]):
                 if metrics == 'pAP':
-                    gt = convert_to_timestamp(ground_truth[:, idx], fps=4.0)
+                    gt = np.where(ground_truth[:, idx] != 0)[0] / 4.0
 
-                    pred = OrderedDict()
-                    pred["score"], pred["timestamp"] = preprocess_pred(prediction[:, idx], threshold=0.005, fps=4.0)
+                    pred = preprocess_pred(prediction[:, idx], threshold=0.005, fps=4.0)
                     result['per_class_AP'][class_name] = compute_score(gt, pred, tOffset_thresholds)
                 else:
                     result['per_class_AP'][class_name] = compute_score(
