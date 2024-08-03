@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 
-def thumos_target_perframe_to_actionstartend(featPath: str, outputPath: str, type: str = "start"):
+def target_perframe_to_actionstartend(featPath: str, outputPath: str, type: str = "start"):
     if not os.path.exists(featPath):
         raise FileNotFoundError("Feature path not found")
     if not os.path.exists(outputPath):
