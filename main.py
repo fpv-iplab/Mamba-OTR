@@ -17,30 +17,38 @@ def main(cfg):
     isEK = "ek" in cfg.DATA.DATA_NAME.lower()
     targetPath = os.path.join(cfg.DATA.DATA_ROOT, cfg.INPUT.TARGET_PERFRAME)
     task = "start" in targetPath
+    inputPath = targetPath.replace("start_" if task else "end_", "")
 
-    if isEK and not os.path.exists(targetPath.replace('target', 'verb')) or len(os.listdir(targetPath.replace('target', 'verb'))) == 0:
-        print("EK dataset detected, converting perframe to action start/end")
+    if isEK:
+        #* Convert EK ACTION TARGET perframe to action start/end
+        if not os.path.exists(targetPath) or len(os.listdir(targetPath)) == 0:
+            print("Converting EK target perframe to action start/end")
+            target_perframe_to_actionstartend(inputPath, targetPath, type="start" if task else "end")
 
-        inputPath = targetPath.replace("start_", "") if task else targetPath.replace("end_", "")
-        inputVerbPath = inputPath.replace('target', 'verb')
-        inputNounPath = inputPath.replace('verb', 'noun')
+        #* Convert EK VERB target perframe to action start/end
+        if not os.path.exists(targetPath.replace('target', 'verb')) or len(os.listdir(targetPath.replace('target', 'verb'))) == 0:
+            print("Converting EK verb target perframe to action start/end")
 
-        print("Converting verb target perframe to action start/end")
-        target_perframe_to_actionstartend(inputVerbPath, targetPath.replace('target', 'verb'), type="start" if task else "end")
+            inputVerbPath = inputPath.replace('target', 'verb')
+            outputVerbPath = targetPath.replace('target', 'verb')
+            target_perframe_to_actionstartend(inputVerbPath, outputVerbPath, type="start" if task else "end")
 
-        print("Converting noun target perframe to action start/end")
-        target_perframe_to_actionstartend(inputNounPath, targetPath.replace('target', 'noun'), type="start" if task else "end")
+        #* Convert EK NOUN target perframe to action start/end
+        if not os.path.exists(targetPath.replace('target', 'noun')) or len(os.listdir(targetPath.replace('target', 'noun'))) == 0:
+            print("Converting EK noun target perframe to action start/end")
 
-        print("Converting target perframe to action start/end")
-        target_perframe_to_actionstartend(inputPath, targetPath, type="start" if task else "end")
+            inputNounPath = inputPath.replace('target', 'noun')
+            outputNounPath = targetPath.replace('target', 'noun')
+            target_perframe_to_actionstartend(inputNounPath, outputNounPath, type="start" if task else "end")
+    else:
+        if not os.path.exists(targetPath) or len(os.listdir(targetPath)) == 0:
+            print("Converting THUMOS target perframe to action start/end")
 
-    elif not os.path.exists(targetPath) or len(os.listdir(targetPath)) == 0:
-        inputPath = targetPath.replace("start_", "") if task else targetPath.replace("end_", "")
-
-        print("Converting target perframe to action start/end")
-        target_perframe_to_actionstartend(inputPath, targetPath, type="start" if task else "end")
+            inputPath = targetPath.replace("start_", "") if task else targetPath.replace("end_", "")
+            target_perframe_to_actionstartend(inputPath, targetPath, type="start" if task else "end")
 
     if cfg.TRAIN:
+        print("Training model")
         train(cfg)
 
 
