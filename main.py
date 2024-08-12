@@ -1,4 +1,6 @@
 import os
+import multiprocessing
+
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 import warnings
@@ -14,6 +16,10 @@ from rekognition_online_action_detection.utils.actionstartend_utils import targe
 
 
 def main(cfg):
+    cpu_count = multiprocessing.cpu_count()
+    cfg.DATA_LOADER.NUM_WORKERS = max(cfg.DATA_LOADER.NUM_WORKERS, cpu_count)
+    print("Using {} workers for data loading".format(cfg.DATA_LOADER.NUM_WORKERS))
+
     isEK = "ek" in cfg.DATA.DATA_NAME.lower()
     targetPath = os.path.join(cfg.DATA.DATA_ROOT, cfg.INPUT.TARGET_PERFRAME)
     task = "start" in targetPath
