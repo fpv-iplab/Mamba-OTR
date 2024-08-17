@@ -14,16 +14,14 @@ from rekognition_online_action_detection.evaluation import compute_result
 def preprocess_end_label(data, delta=3):
     for b in range(data.shape[0]):
         for i in range(data.shape[1]):
-            for j in range(1, data.shape[2]):
-                if data[b, i, j] == 1:
-                    k = i
-                    count = 0
-                    while k > 0 and data[b, k, j] == 1 and data[b, k - 1, j] == 0 and count < delta:
-                        data[b, k - 1, j] = 1
-                        data[b, k - 1, 0] = 0
-
-                        k = k - 1
-                        count = count + 1
+            idx = torch.where(data[b, i, :] == 1)[0]
+            if idx[0] > 0:
+                if i - delta < 0:
+                    data[b, :i, idx] = 1
+                    data[b, :i, 0] = 0
+                else:
+                    data[b, i - delta:i, idx] = 1
+                    data[b, i - delta:i, 0] = 0
     return data
 
 
@@ -62,9 +60,18 @@ def do_perframe_det_train(cfg,
                     batch_size = data[0].shape[0]
                     if cfg.MODEL.LSTR.V_N_CLASSIFIER:
                         det_target, verb_target, noun_target = data[-1]
-                        det_target = det_target.to(device)
-                        verb_target = verb_target.to(device)
-                        noun_target = noun_target.to(device)
+                        if training and cfg.MODEL.FRAME_DELTA > 0 and "end" in cfg.INPUT.TARGET_PERFRAME:
+                            det_target = preprocess_end_label(det_target, cfg.MODEL.FRAME_DELTA)
+                            verb_target = preprocess_end_label(verb_target, cfg.MODEL.FRAME_DELTA)
+                            noun_target = preprocess_end_label(noun_target, cfg.MODEL.FRAME_DELTA)
+
+                            det_target = det_target.to(device)
+                            verb_target = verb_target.to(device)
+                            noun_target = noun_target.to(device)
+                        else:
+                            det_target = det_target.to(device)
+                            verb_target = verb_target.to(device)
+                            noun_target = noun_target.to(device)
                     else:
                         #TODO: preprocess_start_label for propagation of start label (forward)
                         if training and cfg.MODEL.FRAME_DELTA > 0 and "end" in cfg.INPUT.TARGET_PERFRAME:
