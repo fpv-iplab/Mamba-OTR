@@ -73,7 +73,6 @@ def do_perframe_det_train(cfg,
                             verb_target = verb_target.to(device)
                             noun_target = noun_target.to(device)
                     else:
-                        #TODO: preprocess_start_label for propagation of start label (forward)
                         if training and cfg.MODEL.FRAME_DELTA > 0 and "end" in cfg.INPUT.TARGET_PERFRAME:
                             det_target = preprocess_end_label(data[-1], cfg.MODEL.FRAME_DELTA)
                             det_target = det_target.to(device)
