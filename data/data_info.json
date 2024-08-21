@@ -7128,6 +7128,10 @@
             "pour yoghurt",
             "pour cereal"
         ],
+        "verb_names": [
+        ],
+        "noun_names": [
+        ],
         "num_classes": 3807,
         "ignore_index": 0,
         "metrics": "AP",

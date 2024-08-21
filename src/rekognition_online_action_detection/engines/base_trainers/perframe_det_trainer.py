@@ -47,6 +47,10 @@ def do_perframe_det_train(cfg,
         noun_losses = {phase: 0.0 for phase in cfg.SOLVER.PHASES}
         det_pred_scores = []
         det_gt_targets = []
+        verb_pred_scores = []
+        verb_gt_targets = []
+        noun_pred_scores = []
+        noun_gt_targets = []
 
         start = time.time()
         for phase in cfg.SOLVER.PHASES:
@@ -136,6 +140,15 @@ def do_perframe_det_train(cfg,
                             scheduler.step()
                     else:
                         # Prepare for evaluation
+                        if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                            verb_score = verb_score.softmax(dim=1).cpu().tolist()
+                            noun_score = noun_score.softmax(dim=1).cpu().tolist()
+                            verb_target = verb_target.cpu().tolist()
+                            noun_target = noun_target.cpu().tolist()
+                            verb_pred_scores.extend(verb_score)
+                            verb_gt_targets.extend(verb_target)
+                            noun_pred_scores.extend(noun_score)
+                            noun_gt_targets.extend(noun_target)
                         det_score = det_score.softmax(dim=1).cpu().tolist()
                         det_target = det_target.cpu().tolist()
                         det_pred_scores.extend(det_score)
@@ -161,6 +174,21 @@ def do_perframe_det_train(cfg,
             ))
         if 'test' in cfg.SOLVER.PHASES:
             # Compute result
+            if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                verb_result = compute_result[cfg.EVALUATION.METHOD](
+                    cfg,
+                    verb_gt_targets,
+                    verb_pred_scores,
+                    # class_names=cfg.DATA.VERB_CLASS_NAMES, #! TODO: Change data_info to include the verb list
+                    class_names = range(0, len(verb_gt_targets[0])),
+                )
+                noun_result = compute_result[cfg.EVALUATION.METHOD](
+                    cfg,
+                    noun_gt_targets,
+                    noun_pred_scores,
+                    # class_names=cfg.DATA.NOUN_CLASS_NAMES, #! TODO: Change data_info to include the noun list
+                    class_names = range(0, len(noun_gt_targets[0])),
+                )
             det_result = compute_result[cfg.EVALUATION.METHOD](
                 cfg,
                 det_gt_targets,
@@ -183,6 +211,20 @@ def do_perframe_det_train(cfg,
                 log.append('test noun_loss: {:.5f}'.format(
                     noun_losses['test'] / len(data_loaders['test'].dataset),
                 ))
+                if cfg.DATA.METRICS == "pAP":
+                    log.append('test verb_mp_mAP: {:.5f}'.format(
+                        verb_result['mp_mAP'],
+                    ))
+                    log.append('test noun_mp_mAP: {:.5f}'.format(
+                        noun_result['mp_mAP'],
+                    ))
+                else:
+                    log.append('test verb_mAP: {:.5f}'.format(
+                        verb_result['mean_AP'],
+                    ))
+                    log.append('test noun_mAP: {:.5f}'.format(
+                        noun_result['mean_AP'],
+                    ))
         log.append('running time: {:.2f} sec'.format(
             end - start,
         ))
