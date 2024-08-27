@@ -40,7 +40,7 @@ MODEL:
     FUSION_WEIGHT_V: 1.
     FUSION_WEIGHT_N: 1.
   CRITERIONS: [['MCE_EQL', {'anno_path': 'external/rulstm/RULSTM/data/ek100/'}], ['MCE', {}]]
-  FRAME_DELTA: 0
+  FRAME_DELTA: 3
 DATA_LOADER:
   BATCH_SIZE: 32
   NUM_WORKERS: 8
