@@ -42,11 +42,11 @@ MODEL:
   CRITERIONS: [['MCE_EQL', {'anno_path': 'external/rulstm/RULSTM/data/ek100/'}], ['MCE', {}]]
   FRAME_DELTA: 0
 DATA_LOADER:
-  BATCH_SIZE: 60
+  BATCH_SIZE: 32
   NUM_WORKERS: 8
   PIN_MEMORY: True
 SOLVER:
-  NUM_EPOCHS: 30 
+  NUM_EPOCHS: 60
   OPTIMIZER: 'adamw'
   BASE_LR: 5e-05
   WEIGHT_DECAY: 1e-4
