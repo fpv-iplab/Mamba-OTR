@@ -229,4 +229,4 @@ cython_debug/
 checkpoints/*
 ckpt/*
 default_launch.yaml
-.USE/*
+RESULTS/*
