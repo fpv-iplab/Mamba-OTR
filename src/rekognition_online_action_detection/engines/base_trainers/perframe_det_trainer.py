@@ -179,20 +179,19 @@ def do_perframe_det_train(cfg,
                     cfg,
                     verb_gt_targets,
                     verb_pred_scores,
-                    # class_names=cfg.DATA.VERB_CLASS_NAMES, #! TODO: Change data_info to include the verb list
-                    class_names = range(0, len(verb_gt_targets[0])),
+                    class_names=cfg.DATA.VERB_NAMES,
                 )
                 noun_result = compute_result[cfg.EVALUATION.METHOD](
                     cfg,
                     noun_gt_targets,
                     noun_pred_scores,
-                    # class_names=cfg.DATA.NOUN_CLASS_NAMES, #! TODO: Change data_info to include the noun list
-                    class_names = range(0, len(noun_gt_targets[0])),
+                    class_names=cfg.DATA.NOUN_NAMES,
                 )
             det_result = compute_result[cfg.EVALUATION.METHOD](
                 cfg,
                 det_gt_targets,
                 det_pred_scores,
+                class_names=cfg.DATA.CLASS_NAMES,
             )
             if cfg.DATA.METRICS == "pAP":
                 log.append('test det_loss: {:.5f} det_mp_mAP: {:.5f}'.format(
