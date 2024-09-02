@@ -193,7 +193,7 @@ def do_perframe_det_train(cfg,
                 det_pred_scores,
                 class_names=cfg.DATA.CLASS_NAMES,
             )
-            if cfg.DATA.METRICS == "pAP":
+            if cfg.EVALUATION.METHOD == "perpoint":
                 log.append('test det_loss: {:.5f} det_mp_mAP: {:.5f}'.format(
                     det_losses['test'] / len(data_loaders['test'].dataset),
                     det_result['mp_mAP'],
@@ -210,7 +210,7 @@ def do_perframe_det_train(cfg,
                 log.append('test noun_loss: {:.5f}'.format(
                     noun_losses['test'] / len(data_loaders['test'].dataset),
                 ))
-                if cfg.DATA.METRICS == "pAP":
+                if cfg.EVALUATION.METHOD == "perpoint":
                     log.append('test verb_mp_mAP: {:.5f}'.format(
                         verb_result['mp_mAP'],
                     ))

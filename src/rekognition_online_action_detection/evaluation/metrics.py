@@ -143,6 +143,45 @@ def preprocess_pred(data: np.ndarray, threshold: float = 0.005, fps: float = 4.0
     return pred
 
 
+def perframe_perpoint_average_precision(ground_truth,
+                               prediction,
+                               class_names,
+                               ignore_index,
+                               metrics,
+                               postprocessing):
+    """Compute (frame-level) perpoint average precision between ground truth and
+    predictions data frames.
+    """
+    result = OrderedDict()
+    ground_truth = np.array(ground_truth)
+    prediction = np.array(prediction)
+
+    # Postprocessing
+    if postprocessing is not None:
+        ground_truth, prediction = postprocessing(ground_truth, prediction)
+
+    # Build metrics
+    if metrics == 'pAP':
+        compute_score = point_average_precision
+    else:
+        raise RuntimeError('Unknown metrics: {}'.format(metrics))
+
+    # Ignore backgroud class
+    ignore_index = set([0, ignore_index])
+
+    # Compute average precision
+    result['per_class_AP'] = OrderedDict()
+    for idx, class_name in enumerate(class_names):
+        if idx not in ignore_index:
+            if np.any(ground_truth[:, idx]):
+                    gt = np.where(ground_truth[:, idx] != 0)[0] / 4.0
+                    pred = preprocess_pred(prediction[:, idx], threshold=0.005, fps=4.0)
+                    result['per_class_AP'][class_name] = compute_score(gt, pred)
+
+    result["p_mAP"] = np.mean(list(result['per_class_AP'].values()), axis=1)
+    result["mp_mAP"] = np.mean(result["p_mAP"])
+    return result
+
 
 def perframe_average_precision(ground_truth,
                                prediction,
@@ -166,8 +205,6 @@ def perframe_average_precision(ground_truth,
         compute_score = average_precision_score
     elif metrics == 'cAP':
         compute_score = calibrated_average_precision_score
-    elif metrics == 'pAP':
-        compute_score = point_average_precision
     else:
         raise RuntimeError('Unknown metrics: {}'.format(metrics))
 
@@ -179,20 +216,9 @@ def perframe_average_precision(ground_truth,
     for idx, class_name in enumerate(class_names):
         if idx not in ignore_index:
             if np.any(ground_truth[:, idx]):
-                if metrics == 'pAP':
-                    gt = np.where(ground_truth[:, idx] != 0)[0] / 4.0
+                result['per_class_AP'][class_name] = compute_score(ground_truth[:, idx], prediction[:, idx])
 
-                    pred = preprocess_pred(prediction[:, idx], threshold=0.005, fps=4.0)
-                    result['per_class_AP'][class_name] = compute_score(gt, pred)
-                else:
-                    result['per_class_AP'][class_name] = compute_score(ground_truth[:, idx], prediction[:, idx])
-
-    if metrics == 'pAP':
-        result["p_mAP"] = np.mean(list(result['per_class_AP'].values()), axis=1)
-        result["mp_mAP"] = np.mean(result["p_mAP"])
-    else:
-        result['mean_AP'] = np.mean(list(result['per_class_AP'].values()))
-
+    result['mean_AP'] = np.mean(list(result['per_class_AP'].values()))
     return result
 
 
