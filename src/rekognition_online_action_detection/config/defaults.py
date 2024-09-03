@@ -168,6 +168,7 @@ _C.SESSION = ''
 # ---------------------------------------------------------------------------- #
 _C.VERBOSE = False
 _C.TRAIN = False
+_C.TEST = False
 
 
 def get_cfg():

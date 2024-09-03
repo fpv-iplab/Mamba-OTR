@@ -57,6 +57,10 @@ def main(cfg):
         print("Training model")
         train(cfg)
 
+    if cfg.TEST:
+        print("Testing model")
+        test(cfg)
+
 
 
 if __name__ == "__main__":
