@@ -75,7 +75,7 @@ class LSTRDataLayer(data.Dataset):
                 for segment in segments_per_session.iterrows():
                     start_tick = int(segment[1]['start_f'] / 30 * self.cfg.DATA.FPS)
                     end_tick = int(segment[1]['end_f'] / 30 * self.cfg.DATA.FPS)
-                    start_tick += np.random.randint(self.anticipation_length) if self.training else 0
+                    start_tick += np.random.randint(self.anticipation_length) if self.training and self.anticipation_length > 0 else 0
                     start_tick = min(start_tick, end_tick)
                     work_end = start_tick - self.anticipation_length
                     work_start = work_end - self.work_memory_length
