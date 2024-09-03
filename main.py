@@ -16,7 +16,7 @@ from rekognition_online_action_detection.utils.actionstartend_utils import targe
 
 
 def main(cfg):
-    cpu_count = multiprocessing.cpu_count()
+    cpu_count = multiprocessing.cpu_count() - 2
     cfg.DATA_LOADER.NUM_WORKERS = max(cfg.DATA_LOADER.NUM_WORKERS, cpu_count)
     print("Using {} workers for data loading".format(cfg.DATA_LOADER.NUM_WORKERS))
 
