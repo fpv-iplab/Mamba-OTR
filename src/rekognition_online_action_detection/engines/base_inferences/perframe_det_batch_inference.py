@@ -31,6 +31,8 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
     pred_scores_verb = {}
     pred_scores_noun = {}
     gt_targets = {}
+    vrb_target = {}
+    nn_target = {}
 
     with torch.no_grad():
         pbar = tqdm(data_loader, desc='BatchInference')
@@ -60,8 +62,14 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
                             pred_scores_noun[session] = np.zeros((num_frames, cfg.DATA.NUM_NOUNS, cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES))
                     else:
                         pred_scores[session] = np.zeros((num_frames, cfg.DATA.NUM_CLASSES))
+                        if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                            pred_scores_verb[session] = np.zeros((num_frames, cfg.DATA.NUM_VERBS))
+                            pred_scores_noun[session] = np.zeros((num_frames, cfg.DATA.NUM_NOUNS))
                 if session not in gt_targets:
                     gt_targets[session] = np.zeros((num_frames, cfg.DATA.NUM_CLASSES))
+                    if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                        vrb_target[session] = np.zeros((num_frames, cfg.DATA.NUM_VERBS))
+                        nn_target[session] = np.zeros((num_frames, cfg.DATA.NUM_NOUNS))
 
                 if query_indices[0] in torch.arange(0, cfg.MODEL.LSTR.WORK_MEMORY_SAMPLE_RATE):
                     if cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES > 0:
@@ -78,6 +86,12 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
                     else:
                         pred_scores[session][query_indices] = score[bs]
                         gt_targets[session][query_indices] = target[bs]
+                        if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                            pred_scores_verb[session][query_indices] = score_verb[bs]
+                            pred_scores_noun[session][query_indices] = score_noun[bs]
+
+                            vrb_target[session][query_indices] = verb_target[bs]
+                            nn_target[session][query_indices] = noun_target[bs]
                 else:
                     if cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES > 0:
                         for t_a in range(0, cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES):
@@ -89,7 +103,14 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
                         gt_targets[session][query_indices[-1]] = target[bs][-1]
                     else:
                         pred_scores[session][query_indices[-1]] = score[bs][-1]
+                        if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                            pred_scores_verb[session][query_indices[-1]] = score_verb[bs][-1]
+                            pred_scores_noun[session][query_indices[-1]] = score_noun[bs][-1]
+
                         gt_targets[session][query_indices[-1]] = target[bs][-1]
+                        if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                            vrb_target[session][query_indices[-1]] = verb_target[bs][-1]
+                            nn_target[session][query_indices[-1]] = noun_target[bs][-1]
 
     # Save scores and targets
     # pkl.dump({
@@ -102,28 +123,68 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
     if cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES > 0:
         maps_list = []
         for t_a in range(0, cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES):
-            result = compute_result['perframe'](
+            result = compute_result[cfg.EVALUATION.METHOD](
                 cfg,
                 np.concatenate(list(gt_targets.values()), axis=0),
                 np.concatenate(list(pred_scores.values()), axis=0)[:, :, t_a],
+                class_names = cfg.DATA.CLASS_NAMES
             )
-            logger.info('Action anticipation ({:.2f}s) perframe m{}: {:.5f}'.format(
-                (t_a + 1) / cfg.DATA.FPS * cfg.MODEL.LSTR.ANTICIPATION_SAMPLE_RATE,
-                cfg.DATA.METRICS, result['mean_AP']
-            ))
-            maps_list.append(result['mean_AP'])
+            if cfg.EVALUATION.METHOD == "perpoint":
+                logger.info('Action anticipation ({:.2f}s) perpoint m{}: {:.5f}'.format(
+                    (t_a + 1) / cfg.DATA.FPS * cfg.MODEL.LSTR.ANTICIPATION_SAMPLE_RATE,
+                    cfg.DATA.METRICS, result['mp_mAP']
+                ))
+                maps_list.append(result['mp_mAP'])
+            else:
+                logger.info('Action anticipation ({:.2f}s) perframe m{}: {:.5f}'.format(
+                    (t_a + 1) / cfg.DATA.FPS * cfg.MODEL.LSTR.ANTICIPATION_SAMPLE_RATE,
+                    cfg.DATA.METRICS, result['mean_AP']
+                ))
+                maps_list.append(result['mean_AP'])
         logger.info('Action anticipation (mean) perframe m{}: {:.5f}'.format(
             cfg.DATA.METRICS, np.mean(maps_list)
         ))
     else:
-        result = compute_result['perframe'](
-            cfg,
-            np.concatenate(list(gt_targets.values()), axis=0),
-            np.concatenate(list(pred_scores.values()), axis=0),
-        )
-        logger.info('Action detection perframe m{}: {:.5f}'.format(
-            cfg.DATA.METRICS, result['mean_AP']
-        ))
+        if not cfg.EVALUATION.TK_ONLY:
+            print("Computing all results")
+            result_det = compute_result[cfg.EVALUATION.METHOD](
+                cfg,
+                np.concatenate(list(gt_targets.values()), axis=0),
+                np.concatenate(list(pred_scores.values()), axis=0),
+                class_names = cfg.DATA.CLASS_NAMES
+            )
+            result_verb = compute_result[cfg.EVALUATION.METHOD](
+                cfg,
+                np.concatenate(list(vrb_target.values()), axis=0),
+                np.concatenate(list(pred_scores_verb.values()), axis=0),
+                class_names = cfg.DATA.VERB_NAMES,
+            )
+            result_noun = compute_result[cfg.EVALUATION.METHOD](
+                cfg,
+                np.concatenate(list(nn_target.values()), axis=0),
+                np.concatenate(list(pred_scores_noun.values()), axis=0),
+                class_names = cfg.DATA.NOUN_NAMES
+            )
+        else:
+            print("Computing only Take/Release results")
+            result_verb = compute_result[cfg.EVALUATION.METHOD](
+                cfg,
+                np.concatenate(list(vrb_target.values()), axis=0),
+                np.concatenate(list(pred_scores_verb.values()), axis=0),
+                class_names = cfg.DATA.VERB_NAMES,
+                ignore_index = [0] if not cfg.EVALUATION.TK_ONLY else [0].append(list(range(3, cfg.DATA.NUM_VERBS)))
+            )
+            result_det = {"mp_mAP": 0.0, "mean_AP": 0.0}
+            result_noun = {"mp_mAP": 0.0, "mean_AP": 0.0}
+        if cfg.EVALUATION.METHOD == "perpoint":
+            logger.info(f'Action perframe detection m{cfg.DATA.METRICS}: {result_det["mp_mAP"]:.5f},\
+                    verb m{cfg.DATA.METRICS}: {result_verb["mp_mAP"]:.5f},\
+                    noun m{cfg.DATA.METRICS}: {result_noun["mp_mAP"]:.5}')
+        else:
+            logger.info(f'Action perframe detection m{cfg.DATA.METRICS}: {result_det["mean_AP"]:.5f},\
+                    verb m{cfg.DATA.METRICS}: {result_verb["mean_AP"]:.5f},\
+                    noun m{cfg.DATA.METRICS}: {result_noun["mean_AP"]:.5}')
+    return #! return here to avoid the following code
 
     # segment-level evaluation on EK55/EK100
     if cfg.DATA.DATA_NAME.startswith('EK'):
@@ -264,10 +325,15 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
             overall_noun_recalls = topk_recall_multiple_timesteps(noun_scores, noun_labels, k=5)
             overall_action_recalls = topk_recall_multiple_timesteps(action_scores, action_labels, k=5)
 
-            unseen = pd.read_csv(osp.join(path_to_data, 'validation_unseen_participants_ids.csv'), names=['id'], squeeze=True)
-            tail_verbs = pd.read_csv(osp.join(path_to_data, 'validation_tail_verbs_ids.csv'), names=['id'], squeeze=True)
-            tail_nouns = pd.read_csv(osp.join(path_to_data, 'validation_tail_nouns_ids.csv'), names=['id'], squeeze=True)
-            tail_actions = pd.read_csv(osp.join(path_to_data, 'validation_tail_actions_ids.csv'), names=['id'], squeeze=True)
+            unseen = pd.read_csv(osp.join(path_to_data, 'validation_unseen_participants_ids.csv'), names=['id'])
+            tail_verbs = pd.read_csv(osp.join(path_to_data, 'validation_tail_verbs_ids.csv'), names=['id'])
+            tail_nouns = pd.read_csv(osp.join(path_to_data, 'validation_tail_nouns_ids.csv'), names=['id'])
+            tail_actions = pd.read_csv(osp.join(path_to_data, 'validation_tail_actions_ids.csv'), names=['id'])
+
+            unseen = unseen.squeeze("columns")
+            tail_verbs = tail_verbs.squeeze("columns")
+            tail_nouns = tail_nouns.squeeze("columns")
+            tail_actions = tail_actions.squeeze("columns")
 
             unseen_bool_idx = pd.Series(ids).isin(unseen).values
             tail_verbs_bool_idx = pd.Series(ids).isin(tail_verbs).values
