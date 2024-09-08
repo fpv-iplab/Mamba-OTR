@@ -6,6 +6,7 @@ DATA:
   METRICS: "pAP"
 EVALUATION:
   METHOD: "perpoint"
+  TK_ONLY: False
 INPUT:
   MODALITY: 'twostream'
   VISUAL_FEATURE: 'rgb_kinetics_bninception'
