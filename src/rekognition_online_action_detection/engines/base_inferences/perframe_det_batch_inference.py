@@ -172,7 +172,7 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
                 np.concatenate(list(vrb_target.values()), axis=0),
                 np.concatenate(list(pred_scores_verb.values()), axis=0),
                 class_names = cfg.DATA.VERB_NAMES,
-                ignore_index = [0] if not cfg.EVALUATION.TK_ONLY else [0].append(list(range(3, cfg.DATA.NUM_VERBS)))
+                ignore_index = [0] if not cfg.EVALUATION.TK_ONLY else [0, *list(range(3, cfg.DATA.NUM_VERBS))]
             )
             result_det = {"mp_mAP": 0.0, "mean_AP": 0.0}
             result_noun = {"mp_mAP": 0.0, "mean_AP": 0.0}

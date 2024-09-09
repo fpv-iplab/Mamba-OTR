@@ -167,7 +167,7 @@ def perframe_perpoint_average_precision(ground_truth,
         raise RuntimeError('Unknown metrics: {}'.format(metrics))
 
     # Ignore backgroud class
-    ignore_index = set([0, ignore_index])
+    ignore_index = set([0, *ignore_index])
 
     # Compute average precision
     result['per_class_AP'] = OrderedDict()
@@ -209,7 +209,7 @@ def perframe_average_precision(ground_truth,
         raise RuntimeError('Unknown metrics: {}'.format(metrics))
 
     # Ignore backgroud class
-    ignore_index = set([0, ignore_index])
+    ignore_index = set([0, *ignore_index])
 
     # Compute average precision
     result['per_class_AP'] = OrderedDict()
@@ -271,7 +271,7 @@ def perstage_average_precision(ground_truth,
         raise RuntimeError('Unknown metrics: {}'.format(metrics))
 
     # Ignore backgroud class
-    ignore_index = set([0, ignore_index])
+    ignore_index = set([0, *ignore_index])
 
     # Compute average precision
     for perc_s in range(10):
