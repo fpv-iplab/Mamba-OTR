@@ -2,6 +2,42 @@ import os
 import numpy as np
 
 
+
+
+def reduce_take_put(cfg, featPath: str, type: str = "action"):
+    if not os.path.exists(featPath):
+        raise FileNotFoundError("Feature path not found")
+
+    if type not in ["action", "verb", "noun"]:
+        raise ValueError("Type must be either 'action', 'verb' or 'noun")
+    target = "target" if type == "action" else "verb" if type == "verb" else "noun"
+
+
+    for file in os.listdir(featPath):
+        data = np.load(os.path.join(featPath, file))
+
+        if type == "action":
+            data = data[:, cfg.DATA.TK_IDXS]
+        elif type == "verb":
+            data = data[:, 0:3]
+        elif type == "noun":
+            data = data
+
+        if type == "action" or type == "verb":
+            for i in range(data.shape[0]):
+                idxs = np.where(data[i] == 1)[0]
+                if not idxs.size:
+                    data[i, 0] = 1
+
+        outPath = featPath.replace(f"{target}", f"{target}_tk")
+        if not os.path.exists(outPath):
+            os.makedirs(outPath)
+        with open(os.path.join(outPath, file), "wb") as f:
+            np.save(f, data)
+
+
+
+
 def target_perframe_to_actionstartend(featPath: str, outputPath: str, type: str = "start"):
     if not os.path.exists(featPath):
         raise FileNotFoundError("Feature path not found")

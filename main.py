@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore")
 from tools.test_net import test
 from tools.train_net import train
 from rekognition_online_action_detection.utils.parser import load_cfg
-from rekognition_online_action_detection.utils.actionstartend_utils import target_perframe_to_actionstartend
+from rekognition_online_action_detection.utils.actionstartend_utils import target_perframe_to_actionstartend, reduce_take_put as reduce
 
 
 
@@ -46,6 +46,17 @@ def main(cfg):
             inputNounPath = inputPath.replace('target', 'noun')
             outputNounPath = targetPath.replace('target', 'noun')
             target_perframe_to_actionstartend(inputNounPath, outputNounPath, type="start" if task else "end")
+
+        if cfg.DATA.TK_ONLY:
+            cfg.INPUT.TARGET_PERFRAME = cfg.INPUT.TARGET_PERFRAME.replace("target", "target_tk")
+            cfg.DATA.NUM_CLASSES = len(cfg.DATA.TK_IDXS)
+
+            if not os.path.exists(targetPath.replace("target", "target_tk")):
+                print("Reducing EK target perframe to action start/end")
+                reduce(cfg, targetPath, type="action")
+                reduce(cfg, targetPath.replace('target', 'verb'), type="verb")
+                reduce(cfg, targetPath.replace('target', 'noun'), type="noun")
+
     else:
         if not os.path.exists(targetPath) or len(os.listdir(targetPath)) == 0:
             print("Converting THUMOS target perframe to action start/end")
