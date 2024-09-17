@@ -44,7 +44,7 @@ class SingleCrossEntropyLoss(nn.Module):
 @CRITERIONS.register('MCE')
 class MultipCrossEntropyLoss(nn.Module):
 
-    def __init__(self, reduction='mean', ignore_index=-100):
+    def __init__(self, reduction='mean', ignore_index=-100, tk_only=[]):
         super(MultipCrossEntropyLoss, self).__init__()
 
         self.reduction = reduction
@@ -79,18 +79,22 @@ class MultipCrossEntropyLoss(nn.Module):
 class MultipCrossEntropyEqualizedLoss(nn.Module):
 
     def __init__(self, gamma=0.95, lambda_=3e-3, reduction='mean', ignore_index=-100,
-                 anno_path='external/rulstm/RULSTM/data/ek55/'):
+                 anno_path='external/rulstm/RULSTM/data/ek55/', tk_only=[]):
         super(MultipCrossEntropyEqualizedLoss, self).__init__()
 
         # get label distribution
         segment_list = pd.read_csv(osp.join(anno_path, 'training.csv'),
                                    names=['id', 'video', 'start_f', 'end_f', 'verb', 'noun', 'action'],
                                    skipinitialspace=True)
-        freq_info = np.zeros((max(segment_list['action']) + 1,))
+        numel = max(segment_list['action']) + 1 if len(tk_only) == 0 else len(tk_only) - 1
+        freq_info = np.zeros((numel,))
         assert ignore_index == 0
         for segment in segment_list.iterrows():
-            freq_info[segment[1]['action']] += 1.
-        freq_info = freq_info / freq_info.sum()
+            if len(tk_only) > 0:
+                if segment[1]['action'] in tk_only:
+                    freq_info[segment[1]['action'] % len(tk_only)] += 1.
+            else:
+                freq_info = freq_info / freq_info.sum()
         self.freq_info = torch.FloatTensor(freq_info)
 
         self.gamma = gamma
@@ -344,6 +348,7 @@ def build_criterion(cfg, device=None):
         if name in CRITERIONS:
             if 'ignore_index' not in params:
                 params['ignore_index'] = cfg.DATA.IGNORE_INDEX
+            params["tk_only"] = cfg.DATA.TK_IDXS
             criterion[name] = CRITERIONS[name](**params).to(device)
         else:
             raise RuntimeError('Unknown criterion: {}'.format(name))
