@@ -123,7 +123,7 @@ class LSTR(nn.Module):
             a_to_n = action_to_noun_map(cfg.DATA.EK_EXT_PATH,
                                         action_offset=True,
                                         noun_offset=True)
-            num_verbs = max(set(a_to_v.values())) + 1
+            num_verbs = max(set(a_to_v.values())) + 1 if not cfg.DATA.TK_ONLY else 3
             num_nouns = max(set(a_to_n.values())) + 1
             print('Number of verbs (inc. 0):', num_verbs)
             print('Number of nouns (inc. 0):', num_nouns)
