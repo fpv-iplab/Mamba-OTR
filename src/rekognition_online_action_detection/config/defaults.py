@@ -91,6 +91,8 @@ _C.DATA.NUM_VERBS = None
 _C.DATA.NUM_NOUNS = None
 _C.DATA.CLASS_NAMES = None
 _C.DATA.NUM_CLASSES = None
+_C.DATA.TK_ONLY = False
+_C.DATA.TK_IDXS = None
 _C.DATA.IGNORE_INDEX = None
 _C.DATA.METRICS = None
 _C.DATA.FPS = None
@@ -156,7 +158,6 @@ _C.SOLVER.SAVE_EVERY = 1
 # ---------------------------------------------------------------------------- #
 _C.EVALUATION = CN()
 _C.EVALUATION.METHOD = 'perpoint'
-_C.EVALUATION.TK_ONLY = False
 
 # ---------------------------------------------------------------------------- #
 # Output

@@ -46,6 +46,7 @@ def assert_and_infer_cfg(cfg, args):
     cfg.DATA.NUM_VERBS = data_info['num_verbs'] if cfg.DATA.NUM_VERBS is None else cfg.DATA.NUM_VERBS
     cfg.DATA.NUM_NOUNS = data_info['num_nouns'] if cfg.DATA.NUM_NOUNS is None else cfg.DATA.NUM_NOUNS
     cfg.DATA.NUM_CLASSES = data_info['num_classes'] if cfg.DATA.NUM_CLASSES is None else cfg.DATA.NUM_CLASSES
+    cfg.DATA.TK_IDXS = data_info['tk_idxs'] if cfg.DATA.TK_IDXS is None else cfg.DATA.TK_IDXS
     cfg.DATA.IGNORE_INDEX = data_info['ignore_index'] if cfg.DATA.IGNORE_INDEX is None else cfg.DATA.IGNORE_INDEX
     cfg.DATA.METRICS = data_info['metrics'] if cfg.DATA.METRICS is None else cfg.DATA.METRICS
     cfg.DATA.FPS = data_info['fps'] if cfg.DATA.FPS is None else cfg.DATA.FPS
