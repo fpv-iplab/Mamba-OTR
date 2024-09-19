@@ -231,7 +231,16 @@ def do_perframe_det_train(cfg,
 
         # Save checkpoint for model and optimizer
         if epoch % cfg.SOLVER.SAVE_EVERY == 0:
-            checkpointer.save(epoch, model, optimizer, det_result['mp_mAP'])
+            if cfg.EVALUATION.METHOD == "perpoint":
+                if cfg.DATA.TK_ONLY and cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                    checkpointer.save(epoch, model, optimizer, verb_result['mp_mAP'])
+                else:
+                    checkpointer.save(epoch, model, optimizer, det_result['mp_mAP'])
+            else:
+                if cfg.DATA.TK_ONLY and cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                    checkpointer.save(epoch, model, optimizer, verb_result['mean_AP'])
+                else:
+                    checkpointer.save(epoch, model, optimizer, det_result['mean_AP'])
 
         # Shuffle dataset for next epoch
         data_loaders['train'].dataset.shuffle()
