@@ -61,7 +61,11 @@ class LSTRDataLayer(data.Dataset):
                                        skipinitialspace=True)
             segment_list['len_f'] = segment_list['end_f'] - segment_list['start_f']
 
-            self.segment_by_cls = {cls: segment_list[segment_list['action'] == cls]
+            if self.cfg.DATA.TK_ONLY:
+                self.segment_by_cls = {cls: segment_list[segment_list['action'] == cls]
+                                   for cls in self.cfg.DATA.TK_IDXS}
+            else:
+                self.segment_by_cls = {cls: segment_list[segment_list['action'] == cls]
                                    for cls in range(0, self.cfg.DATA.NUM_CLASSES - 1)}
             for session in self.sessions:
                 target = np.load(osp.join(self.data_root, self.target_perframe, session + '.npy'))
@@ -191,6 +195,8 @@ class LSTRDataLayer(data.Dataset):
                 num_clip = int(len(segments_before) * self.clip_mixup_rate)
                 segments_to_mixup = segments_before.sample(num_clip, replace=False,
                                                            weights=prob)
+                if self.cfg.DATA.TK_ONLY:
+                    segments_to_mixup = segments_to_mixup[segments_to_mixup['action'].isin(self.cfg.DATA.TK_IDXS)]
                 for old_segment in segments_to_mixup.iterrows():
                     old_start_tick = int(old_segment[1]['start_f'] / 30 * self.cfg.DATA.FPS)
                     old_end_tick = int(np.ceil(old_segment[1]['end_f'] / 30 * self.cfg.DATA.FPS))
