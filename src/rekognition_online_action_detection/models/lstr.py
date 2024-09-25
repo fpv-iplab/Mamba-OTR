@@ -11,6 +11,11 @@ from .normalized_linear import NormalizedLinear
 from .feature_head import build_feature_head
 from ..utils.ek_utils import (action_to_noun_map, action_to_verb_map)
 
+# Mamba Imports
+from mamba_ssm.ops.triton.layernorm import RMSNorm, rms_norm_fn
+from external.video_mamba_suite.video_mamba_suite.action_anticipation.src.rekognition_online_action_detection.models import create_block
+
+
 
 class LSTR(nn.Module):
 
@@ -56,7 +61,7 @@ class LSTR(nn.Module):
                              'not be both True')
 
         # Build LSTR encoder
-        if self.long_enabled:
+        if self.long_enabled and cfg.MODEL.LSTR.MAMBA_LAYER != -1:
             self.enc_queries = nn.ModuleList()
             self.enc_modules = nn.ModuleList()
             for i, param in enumerate(cfg.MODEL.LSTR.ENC_MODULE):
@@ -82,7 +87,7 @@ class LSTR(nn.Module):
             self.register_parameter('enc_modules', None)
 
         # Build LSTR decoder
-        if self.long_enabled:
+        if self.long_enabled and cfg.MODEL.LSTR.MAMBA_LAYER != -1:
             param = cfg.MODEL.LSTR.DEC_MODULE
             dec_layer = tr.TransformerDecoderLayer(
                 self.d_model, self.num_heads, self.dim_feedforward,
@@ -90,12 +95,26 @@ class LSTR(nn.Module):
             self.dec_modules = tr.TransformerDecoder(
                 dec_layer, param[1], tr.layer_norm(self.d_model, param[2]))
         else:
-            param = cfg.MODEL.LSTR.DEC_MODULE
-            dec_layer = tr.TransformerEncoderLayer(
-                self.d_model, self.num_heads, self.dim_feedforward,
-                self.dropout, self.activation)
-            self.dec_modules = tr.TransformerEncoder(
-                dec_layer, param[1], tr.layer_norm(self.d_model, param[2]))
+            # --------------------------------------
+            # Code from video-mamba-suite
+            if cfg.MODEL.LSTR.MAMBA_LAYER == 0:
+                param = cfg.MODEL.LSTR.DEC_MODULE
+                dec_layer = tr.TransformerEncoderLayer(
+                    self.d_model, self.num_heads, self.dim_feedforward,
+                    self.dropout, self.activation)
+                self.dec_modules = tr.TransformerEncoder(
+                    dec_layer, param[1], tr.layer_norm(self.d_model, param[2]))
+                self.is_mamba = False
+            else:
+                print(f"Init Mamba Encoder!", flush=True)
+                self.mamba_modules = nn.ModuleList()
+                for _ in range(cfg.MODEL.LSTR.MAMBA_LAYER):
+                    self.mamba_modules.append(create_block(self.d_model))
+                self.norm_f = RMSNorm(
+                    self.d_model, eps=1e-5
+                )
+                self.is_mamba = True
+            # --------------------------------------
 
         # Build decode token (for anticipation)
         if self.anticipation_num_samples > 0:
@@ -131,6 +150,10 @@ class LSTR(nn.Module):
             self.classifier_noun = nn.Linear(self.d_model, num_nouns)
 
         self.pred_future = 'PRED_FUTURE' in list(zip(*cfg.MODEL.CRITERIONS))[0]
+
+        total_param = sum([p.numel() for p in self.parameters()])
+        print(f"Total parameters: {total_param / 10**6:.2f} M", flush=True)
+
 
     def forward(self, visual_inputs, motion_inputs, object_inputs, memory_key_padding_mask=None):
         if self.long_enabled:
@@ -181,7 +204,7 @@ class LSTR(nn.Module):
         if self.long_enabled:
             memory = long_memories
 
-        if self.work_enabled:
+        if self.work_enabled and self.cfg.MODEL.LSTR.MAMBA_LAYER != -1:
             # Compute work memories
             if visual_inputs.ndim == 5:
                 visual_inputs_avg = visual_inputs[:, self.long_memory_num_samples:].mean((2, 3))
@@ -236,10 +259,34 @@ class LSTR(nn.Module):
                         tgt_mask=mask,
                     )
             else:
-                output = self.dec_modules(
-                    work_memories,
-                    src_mask=mask,
-                )
+                # --------------------------------------
+                # Code from video-mamba-suite
+                if self.is_mamba:
+                    if self.long_enabled:
+                        work_memories = torch.cat([long_memories, work_memories], dim=0)
+                    output = work_memories.transpose(0, 1)
+                    for layer in self.mamba_modules:
+                        output, residual = layer(
+                            output
+                        )
+                    output = rms_norm_fn(
+                        output,
+                        self.norm_f.weight,
+                        self.norm_f.bias,
+                        eps=self.norm_f.eps,
+                        residual=residual,
+                        prenorm=False,
+                        residual_in_fp32=True,
+                    )
+                    if self.long_enabled:
+                        output = output[:, self.long_memory_num_samples:, :]
+                    output = output.transpose(0, 1)
+                else:
+                    output = self.dec_modules(
+                        work_memories,
+                        src_mask=mask,
+                    )
+                # --------------------------------------
 
         full_orig_feats = self.feature_head_work(
                 visual_inputs_avg,
