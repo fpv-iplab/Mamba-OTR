@@ -21,6 +21,7 @@ class LSTR(nn.Module):
 
     def __init__(self, cfg):
         super(LSTR, self).__init__()
+        self.cfg = cfg
 
         # Build long feature heads
         self.long_memory_num_samples = cfg.MODEL.LSTR.LONG_MEMORY_NUM_SAMPLES
