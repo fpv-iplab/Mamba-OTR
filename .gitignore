@@ -228,5 +228,6 @@ cython_debug/
 # Own
 checkpoints/*
 ckpt/*
+ckpt
 default_launch.yaml
 RESULTS/*
