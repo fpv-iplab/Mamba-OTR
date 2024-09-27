@@ -5,5 +5,4 @@ yacs
 pandas
 tqdm
 scikit-learn
-mamba_ssm
-causal-conv1d
+packaging
