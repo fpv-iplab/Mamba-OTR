@@ -348,7 +348,7 @@ def build_criterion(cfg, device=None):
         if name in CRITERIONS:
             if 'ignore_index' not in params:
                 params['ignore_index'] = cfg.DATA.IGNORE_INDEX
-            params["tk_only"] = cfg.DATA.TK_IDXS
+            params["tk_only"] = cfg.DATA.TK_IDXS if cfg.DATA.TK_ONLY else []
             criterion[name] = CRITERIONS[name](**params).to(device)
         else:
             raise RuntimeError('Unknown criterion: {}'.format(name))
