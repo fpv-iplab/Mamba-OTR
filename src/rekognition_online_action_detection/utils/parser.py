@@ -41,12 +41,12 @@ def assert_and_infer_cfg(cfg, args):
 
     cfg.DATA.DATA_ROOT = data_info['data_root'] if cfg.DATA.DATA_ROOT is None else cfg.DATA.DATA_ROOT
     cfg.DATA.CLASS_NAMES = data_info['class_names'] if cfg.DATA.CLASS_NAMES is None else cfg.DATA.CLASS_NAMES
-    cfg.DATA.VERB_NAMES = data_info['verb_names'] if cfg.DATA.VERB_NAMES is None else cfg.DATA.VERB_NAMES
-    cfg.DATA.NOUN_NAMES = data_info['noun_names'] if cfg.DATA.NOUN_NAMES is None else cfg.DATA.NOUN_NAMES
-    cfg.DATA.NUM_VERBS = data_info['num_verbs'] if cfg.DATA.NUM_VERBS is None else cfg.DATA.NUM_VERBS
-    cfg.DATA.NUM_NOUNS = data_info['num_nouns'] if cfg.DATA.NUM_NOUNS is None else cfg.DATA.NUM_NOUNS
+    cfg.DATA.VERB_NAMES = data_info['verb_names'] if cfg.DATA.VERB_NAMES is None and cfg.DATA.DATA_NAME == "EK100" else cfg.DATA.VERB_NAMES
+    cfg.DATA.NOUN_NAMES = data_info['noun_names'] if cfg.DATA.NOUN_NAMES is None and cfg.DATA.DATA_NAME == "EK100" else cfg.DATA.NOUN_NAMES
+    cfg.DATA.NUM_VERBS = data_info['num_verbs'] if cfg.DATA.NUM_VERBS is None and cfg.DATA.DATA_NAME == "EK100" else cfg.DATA.NUM_VERBS
+    cfg.DATA.NUM_NOUNS = data_info['num_nouns'] if cfg.DATA.NUM_NOUNS is None and cfg.DATA.DATA_NAME == "EK100" else cfg.DATA.NUM_NOUNS
     cfg.DATA.NUM_CLASSES = data_info['num_classes'] if cfg.DATA.NUM_CLASSES is None else cfg.DATA.NUM_CLASSES
-    cfg.DATA.TK_IDXS = data_info['tk_idxs'] if cfg.DATA.TK_IDXS is None else cfg.DATA.TK_IDXS
+    cfg.DATA.TK_IDXS = data_info['tk_idxs'] if cfg.DATA.TK_IDXS is None and cfg.DATA.DATA_NAME == "EK100" else cfg.DATA.TK_IDXS
     if cfg.DATA.TK_ONLY:
         cfg.DATA.NUM_VERBS = 3
         cfg.DATA.NUM_CLASSES = len(cfg.DATA.TK_IDXS)
