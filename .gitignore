@@ -231,3 +231,5 @@ ckpt/*
 ckpt
 default_launch.yaml
 RESULTS/*
+data/*
+!data/data_info.json
