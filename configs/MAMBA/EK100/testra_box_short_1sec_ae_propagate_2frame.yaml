@@ -4,7 +4,7 @@ DATA:
   CLIP_MIXUP_SAMPLE: 'uniform'
   EK_EXT_PATH: 'external/rulstm/RULSTM/data/ek100/'
   METRICS: "pAP"
-  TK_ONLY: True
+  TK_ONLY: False
 EVALUATION:
   METHOD: "perpoint"
 INPUT:
@@ -19,7 +19,7 @@ MODEL:
     LINEAR_ENABLED: True
     LINEAR_OUT_FEATURES: 2048
   LSTR:
-    MAMBA_LAYER: 1
+    MAMBA_LAYER: 2
     NUM_HEADS: 8
     DIM_FEEDFORWARD: 2048
     DROPOUT: 0.1
