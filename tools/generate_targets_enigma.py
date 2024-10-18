@@ -1,0 +1,102 @@
+import os
+import json
+import lmdb
+import argparse
+import numpy as np
+
+
+
+
+def fix_fps(ann_data, out_path):
+    for video in ann_data["videos"]:
+        ann_data["videos"][video]["fps"] = ann_data["videos"][video]["frame_count"] / ann_data["videos"][video]["duration_seconds"]
+    with open(out_path, 'w') as f:
+        json.dump(ann_data, f, indent=4)
+
+
+def fix_frame_annotations(ann_data, out_path, OLD_FPS=30):
+    frames = list(ann_data["frame_annotations"].keys())
+    for frame in frames:
+        video = frame.split("_")[0]
+        frame_id = int(frame.split("_")[1])
+
+        video_fps = ann_data["videos"][video]["fps"]
+        action_sec = frame_id / OLD_FPS
+
+        new_frame_id = int(action_sec * video_fps)
+        ann_data["frame_annotations"][f"{video}_{new_frame_id}"] = ann_data["frame_annotations"].pop(frame)
+    with open(out_path, 'w') as f:
+        json.dump(ann_data, f, indent=4)
+
+
+def fix_frame_count(ann_data, env, out_path):
+    with env.begin() as txn:
+        cursor = txn.cursor()
+
+        for video in ann_data['videos']:
+            tot_frame_raw = int(ann_data['videos'][video]["frame_count"])
+            tot_frame_actual = tot_frame_raw
+
+            for n in range(1, tot_frame_raw):
+                name = f"{video}_{n:010d}.jpg"
+                frame = cursor.get(name.encode())
+                if frame is None:
+                    tot_frame_actual = int(name.split('.jpg')[0].split('_')[-1].lstrip("0")) - 1
+                    break
+            ann_data['videos'][video]["frame_count"] = tot_frame_actual
+            print(f"Video {video} - Frame Count: {tot_frame_raw} -> {ann_data['videos'][video]['frame_count']}")
+
+        with open(out_path, 'w') as f:
+            json.dump(ann_data, f, indent=4)
+
+
+def fix_annotations(ann_data, env, out_path):
+    fix_frame_count(ann_data, env, out_path)
+    fix_fps(ann_data, out_path)
+    fix_frame_annotations(ann_data, out_path, OLD_FPS=30)
+
+
+
+
+
+
+def main(args):
+    ENIGMA_VIDEO_COUNT = 51
+    data_path = args.data_path
+    if not os.path.exists(data_path):
+        raise FileNotFoundError("Data path does not exist")
+
+    ann_file_path = os.path.join(data_path, "annotations_raw.json")
+    if not os.path.exists(ann_file_path):
+        raise FileNotFoundError("Annotations file does not exist")
+
+    feature_file_path = os.path.join(data_path, "raw_data")
+    if not os.path.exists(feature_file_path):
+        raise FileNotFoundError("Feature file does not exist")
+    
+    ann_out_path = os.path.join(data_path, "annotations_fix.json")
+    feature_out_path = os.path.join(data_path, "DINOv2")
+
+
+    with open(ann_file_path, "r") as f:
+        ann_data = json.load(f)
+    env = lmdb.open(feature_file_path, readonly=True, lock=False)
+
+    if not os.path.exists(ann_out_path):
+        fix_annotations(ann_data, env, ann_out_path)
+
+    if not os.path.exists(feature_out_path):
+        os.makedirs(feature_out_path)
+    if len(os.listdir(feature_out_path)) != ENIGMA_VIDEO_COUNT:
+        generate_features(ann_data, env, feature_out_path)
+    
+    
+
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Generate targets for ENIGMA-51 Dataset')
+    parser.add_argument('--data-path', type=str, default=os.path.join(os.path.abspath(__file__), "data", "ENIGMA-51"))
+    args = parser.parse_args()
+    main(args)
