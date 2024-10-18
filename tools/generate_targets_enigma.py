@@ -56,6 +56,23 @@ def fix_annotations(ann_data, env, out_path):
     fix_frame_annotations(ann_data, out_path, OLD_FPS=30)
 
 
+def generate_features(ann_data, env, out_path):
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+
+    with env.begin() as txn:
+        cursor = txn.cursor()
+        for video in ann_data['videos']:
+            data = []
+            tot_frame = ann_data['videos'][video]["frame_count"]
+
+            for n in range(1, tot_frame + 1):
+                name = f"{video}_{n:010d}.jpg"
+                frame = cursor.get(name.encode())
+                if frame is not None:
+                    data.append(np.frombuffer(frame, dtype=np.float32))
+            data = np.array(data)
+            np.save(os.path.join(out_path, f"{video}.npy"), data)
 
 
 
