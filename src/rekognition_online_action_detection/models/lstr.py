@@ -88,7 +88,7 @@ class LSTR(nn.Module):
             self.register_parameter('enc_modules', None)
 
         # Build LSTR decoder
-        if self.long_enabled and cfg.MODEL.LSTR.MAMBA_LAYER != -1:
+        if self.long_enabled and cfg.MODEL.LSTR.MAMBA_LAYER == 0:
             param = cfg.MODEL.LSTR.DEC_MODULE
             dec_layer = tr.TransformerDecoderLayer(
                 self.d_model, self.num_heads, self.dim_feedforward,
