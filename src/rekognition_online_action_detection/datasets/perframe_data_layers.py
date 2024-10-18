@@ -13,6 +13,7 @@ from .datasets import DATA_LAYERS as registry
 from rekognition_online_action_detection.utils.ek_utils import (action_to_noun_map, action_to_verb_map)
 
 
+@registry.register('LSTRENIGMA')
 @registry.register('LSTRTHUMOS')
 @registry.register('LSTRTVSeries')
 @registry.register('LSTREK55')
