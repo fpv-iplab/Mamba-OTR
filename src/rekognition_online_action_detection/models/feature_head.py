@@ -18,9 +18,11 @@ FEATURE_SIZES = {
     'rgb_kinetics_resnet50': 2048,
     'flow_kinetics_resnet50': 2048,
     'obj_ek55_fasterrcnn': 352,
+    'DINOv2': 1024
 }
 
 
+@FEATURE_HEADS.register('ENIGMA')
 @FEATURE_HEADS.register('THUMOS')
 @FEATURE_HEADS.register('TVSeries')
 @FEATURE_HEADS.register('EK55')
