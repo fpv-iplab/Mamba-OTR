@@ -115,7 +115,7 @@ def main(args):
 
     feature_out_path = os.path.join(data_path, "DINOv2")
     ann_out_path = os.path.join(data_path, "annotations_fix.json")
-    target_path = os.path.join(data_path, "target_perframe")
+    target_path = os.path.join(data_path, "target_end_perframe")
 
 
     with open(ann_file_path, "r") as f:
