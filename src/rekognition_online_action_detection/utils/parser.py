@@ -56,6 +56,7 @@ def assert_and_infer_cfg(cfg, args):
     cfg.DATA.IGNORE_INDEX = data_info['ignore_index'] if cfg.DATA.IGNORE_INDEX is None else cfg.DATA.IGNORE_INDEX
     cfg.DATA.METRICS = data_info['metrics'] if cfg.DATA.METRICS is None else cfg.DATA.METRICS
     cfg.DATA.FPS = data_info['fps'] if cfg.DATA.FPS is None else cfg.DATA.FPS
+    cfg.DATA.DATA_FPS = data_info['data_fps'] if cfg.DATA.DATA_FPS is None else cfg.DATA.DATA_FPS
     cfg.DATA.TRAIN_SESSION_SET = data_info['train_session_set'] if cfg.DATA.TRAIN_SESSION_SET is None else cfg.DATA.TRAIN_SESSION_SET
     cfg.DATA.TEST_SESSION_SET = data_info['test_session_set'] if cfg.DATA.TEST_SESSION_SET is None else cfg.DATA.TEST_SESSION_SET
 
@@ -82,6 +83,8 @@ def assert_and_infer_cfg(cfg, args):
             cfg.MODEL.LSTR.LONG_MEMORY_LENGTH + \
             cfg.MODEL.LSTR.WORK_MEMORY_LENGTH
         cfg.MODEL.LSTR.ANTICIPATION_LENGTH = cfg.MODEL.LSTR.ANTICIPATION_SECONDS * cfg.DATA.FPS
+        if cfg.DATA.DATA_NAME == 'ENIGMA':
+            cfg.DATA.FPS = cfg.DATA.DATA_FPS
         assert cfg.MODEL.LSTR.AGES_MEMORY_LENGTH % cfg.MODEL.LSTR.AGES_MEMORY_SAMPLE_RATE == 0
         assert cfg.MODEL.LSTR.LONG_MEMORY_LENGTH % cfg.MODEL.LSTR.LONG_MEMORY_SAMPLE_RATE == 0
         assert cfg.MODEL.LSTR.WORK_MEMORY_LENGTH % cfg.MODEL.LSTR.WORK_MEMORY_SAMPLE_RATE == 0

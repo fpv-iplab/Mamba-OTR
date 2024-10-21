@@ -148,6 +148,7 @@ def perframe_perpoint_average_precision(ground_truth,
                                class_names,
                                ignore_index,
                                metrics,
+                               fps,
                                postprocessing):
     """Compute (frame-level) perpoint average precision between ground truth and
     predictions data frames.
@@ -174,8 +175,8 @@ def perframe_perpoint_average_precision(ground_truth,
     for idx, class_name in enumerate(class_names):
         if idx not in ignore_index:
             if np.any(ground_truth[:, idx]):
-                    gt = np.where(ground_truth[:, idx] != 0)[0] / 4.0
-                    pred = preprocess_pred(prediction[:, idx], threshold=0.005, fps=4.0)
+                    gt = np.where(ground_truth[:, idx] != 0)[0] / fps
+                    pred = preprocess_pred(prediction[:, idx], threshold=0.005, fps=fps)
                     result['per_class_AP'][class_name] = compute_score(gt, pred)
 
     result["p_mAP"] = np.mean(list(result['per_class_AP'].values()), axis=1)
