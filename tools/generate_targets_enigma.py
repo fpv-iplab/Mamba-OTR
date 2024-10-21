@@ -64,7 +64,7 @@ def generate_features(ann_data, env, out_path):
         cursor = txn.cursor()
         for video in ann_data['videos']:
             data = []
-            tot_frame = ann_data['videos'][video]["frame_count"]
+            tot_frame = int(ann_data['videos'][video]["frame_count"])
 
             for n in range(1, tot_frame + 1):
                 name = f"{video}_{n:010d}.jpg"
@@ -78,7 +78,7 @@ def generate_features(ann_data, env, out_path):
 def generate_targets(ann_data, out_path):
     data = dict.fromkeys(ann_data["videos"].keys())
     for video in ann_data["videos"]:
-        frame_count = ann_data["videos"][video]["frame_count"]
+        frame_count = int(ann_data["videos"][video]["frame_count"])
         data[video] = np.zeros((frame_count, len(list(ann_data["interaction_types"].keys())) + 1))
 
     for frame in ann_data["frame_annotations"]:
