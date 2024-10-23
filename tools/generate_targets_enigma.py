@@ -44,19 +44,20 @@ def fix_frame_count(ann_data, env, out_path):
                     tot_frame_actual = int(name.split('.jpg')[0].split('_')[-1].lstrip("0")) - 1
                     break
             ann_data['videos'][video]["frame_count"] = tot_frame_actual
-            print(f"Video {video} - Frame Count: {tot_frame_raw} -> {ann_data['videos'][video]['frame_count']}")
 
         with open(out_path, 'w') as f:
             json.dump(ann_data, f, indent=4)
 
 
 def fix_annotations(ann_data, env, out_path):
+    print("Fixing annotations")
     fix_frame_count(ann_data, env, out_path)
     fix_fps(ann_data, out_path)
     fix_frame_annotations(ann_data, out_path, OLD_FPS=30)
 
 
 def generate_features(ann_data, env, out_path):
+    print("Generating features")
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
