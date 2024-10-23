@@ -76,6 +76,10 @@ def generate_features(ann_data, env, out_path):
 
 
 def generate_targets(ann_data, out_path):
+    print("Generating targets")
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+
     data = dict.fromkeys(ann_data["videos"].keys())
     for video in ann_data["videos"]:
         frame_count = int(ann_data["videos"][video]["frame_count"])
