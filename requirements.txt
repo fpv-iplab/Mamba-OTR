@@ -1,8 +1,61 @@
-torch
-torchvision
-torchaudio
-yacs
-pandas
-tqdm
-scikit-learn
-packaging
+autocommand==2.2.2
+backports.tarfile==1.2.0
+Brotli @ file:///croot/brotli-split_1714483155106/work
+-e git+https://github.com/OpenGVLab/video-mamba-suite.git@ec9108b72d5db59f6d634c94cd0e008228a7b918#egg=causal_conv1d&subdirectory=../../../external/video_mamba_suite/causal-conv1d
+certifi @ file:///croot/certifi_1725551672989/work/certifi
+charset-normalizer @ file:///croot/charset-normalizer_1721748349566/work
+einops==0.8.0
+filelock @ file:///croot/filelock_1700591183607/work
+fsspec==2024.10.0
+gmpy2 @ file:///work/ci_py311/gmpy2_1676839849213/work
+huggingface-hub==0.26.2
+idna @ file:///croot/idna_1714398848350/work
+importlib_metadata==8.0.0
+importlib_resources==6.4.0
+inflect==7.3.1
+jaraco.collections==5.1.0
+jaraco.context==5.3.0
+jaraco.functools==4.0.1
+jaraco.text==3.12.1
+Jinja2 @ file:///croot/jinja2_1716993405101/work
+joblib==1.4.2
+-e git+https://github.com/OpenGVLab/video-mamba-suite.git@ec9108b72d5db59f6d634c94cd0e008228a7b918#egg=mamba_ssm&subdirectory=../../../external/video_mamba_suite/mamba
+MarkupSafe @ file:///croot/markupsafe_1704205993651/work
+mkl-service==2.4.0
+mkl_fft @ file:///croot/mkl_fft_1725370245198/work
+mkl_random @ file:///croot/mkl_random_1725370241878/work
+more-itertools==10.3.0
+mpmath @ file:///croot/mpmath_1690848262763/work
+networkx @ file:///croot/networkx_1720002482208/work
+ninja==1.11.1.1
+numpy @ file:///croot/numpy_and_numpy_base_1708638617955/work/dist/numpy-1.26.4-cp311-cp311-linux_x86_64.whl#sha256=5f96f274d410a1682519282ae769c877d32fdbf171aa8badec7bf5e1d3a1748a
+packaging==24.1
+pandas==2.2.3
+pillow @ file:///croot/pillow_1721059439630/work
+platformdirs==4.2.2
+PySocks @ file:///work/ci_py311/pysocks_1676822712504/work
+python-dateutil==2.9.0.post0
+pytz==2024.2
+PyYAML @ file:///croot/pyyaml_1728657952215/work
+regex==2024.9.11
+requests @ file:///croot/requests_1721410876868/work
+safetensors==0.4.5
+scikit-learn==1.5.2
+scipy==1.14.1
+six==1.16.0
+sympy==1.13.1
+threadpoolctl==3.5.0
+tokenizers==0.20.1
+tomli==2.0.1
+torch==2.5.1
+torchaudio==2.5.1
+torchvision==0.20.1
+tqdm==4.66.6
+transformers==4.46.1
+triton==3.1.0
+typeguard==4.3.0
+typing_extensions @ file:///croot/typing_extensions_1715268824938/work
+tzdata==2024.2
+urllib3 @ file:///croot/urllib3_1727769808118/work
+yacs==0.1.8
+zipp==3.19.2
