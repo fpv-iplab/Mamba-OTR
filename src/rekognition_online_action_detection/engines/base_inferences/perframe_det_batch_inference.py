@@ -47,8 +47,8 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
                 score = score.cpu().numpy()
                 score_verb = score_verb.cpu().numpy()
                 score_noun = score_noun.cpu().numpy()
-                cfg.DATA.NUM_VERBS = 126 if cfg.DATA.DATA_NAME == 'EK55' else 98
-                cfg.DATA.NUM_NOUNS = 353 if cfg.DATA.DATA_NAME == 'EK55' else 301
+                cfg.DATA.NUM_VERBS = 126 if cfg.DATA.DATA_NAME == 'EK55' else 98 if not cfg.DATA.TK_ONLY else cfg.DATA.NUM_VERBS
+                cfg.DATA.NUM_NOUNS = 353 if cfg.DATA.DATA_NAME == 'EK55' else 301 if not cfg.DATA.TK_ONLY else cfg.DATA.NUM_NOUNS
             else:
                 score = (score.cpu().numpy()
                          if cfg.DATA.DATA_NAME.startswith('EK')
