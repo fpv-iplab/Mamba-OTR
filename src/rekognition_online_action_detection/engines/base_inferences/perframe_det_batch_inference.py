@@ -153,18 +153,19 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
                 np.concatenate(list(pred_scores.values()), axis=0),
                 class_names = cfg.DATA.CLASS_NAMES
             )
-            result_verb = compute_result[cfg.EVALUATION.METHOD](
-                cfg,
-                np.concatenate(list(vrb_target.values()), axis=0),
-                np.concatenate(list(pred_scores_verb.values()), axis=0),
-                class_names = cfg.DATA.VERB_NAMES,
-            )
-            result_noun = compute_result[cfg.EVALUATION.METHOD](
-                cfg,
-                np.concatenate(list(nn_target.values()), axis=0),
-                np.concatenate(list(pred_scores_noun.values()), axis=0),
-                class_names = cfg.DATA.NOUN_NAMES
-            )
+            if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                result_verb = compute_result[cfg.EVALUATION.METHOD](
+                    cfg,
+                    np.concatenate(list(vrb_target.values()), axis=0),
+                    np.concatenate(list(pred_scores_verb.values()), axis=0),
+                    class_names = cfg.DATA.VERB_NAMES,
+                )
+                result_noun = compute_result[cfg.EVALUATION.METHOD](
+                    cfg,
+                    np.concatenate(list(nn_target.values()), axis=0),
+                    np.concatenate(list(pred_scores_noun.values()), axis=0),
+                    class_names = cfg.DATA.NOUN_NAMES
+                )
         else:
             print("Computing only Take/Release results")
             result_verb = compute_result[cfg.EVALUATION.METHOD](
@@ -177,13 +178,19 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
             result_det = {"mp_mAP": 0.0, "mean_AP": 0.0}
             result_noun = {"mp_mAP": 0.0, "mean_AP": 0.0}
         if cfg.EVALUATION.METHOD == "perpoint":
-            logger.info(f'Action perframe detection m{cfg.DATA.METRICS}: {result_det["mp_mAP"]:.5f},\
+            if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                logger.info(f'Action perframe detection m{cfg.DATA.METRICS}: {result_det["mp_mAP"]:.5f},\
                     verb m{cfg.DATA.METRICS}: {result_verb["mp_mAP"]:.5f},\
                     noun m{cfg.DATA.METRICS}: {result_noun["mp_mAP"]:.5}')
+            else:
+                logger.info(f'Action perframe detection m{cfg.DATA.METRICS}: {result_det["mp_mAP"]:.5f}')
         else:
-            logger.info(f'Action perframe detection m{cfg.DATA.METRICS}: {result_det["mean_AP"]:.5f},\
+            if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                logger.info(f'Action perframe detection m{cfg.DATA.METRICS}: {result_det["mean_AP"]:.5f},\
                     verb m{cfg.DATA.METRICS}: {result_verb["mean_AP"]:.5f},\
                     noun m{cfg.DATA.METRICS}: {result_noun["mean_AP"]:.5}')
+            else:
+                logger.info(f'Action perframe detection m{cfg.DATA.METRICS}: {result_det["mean_AP"]:.5f}')
     return #! return here to avoid the following code
 
     # segment-level evaluation on EK55/EK100
