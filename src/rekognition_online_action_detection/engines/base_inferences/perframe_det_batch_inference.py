@@ -145,38 +145,26 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
             cfg.DATA.METRICS, np.mean(maps_list)
         ))
     else:
-        if not cfg.DATA.TK_ONLY:
-            print("Computing all results")
-            result_det = compute_result[cfg.EVALUATION.METHOD](
-                cfg,
-                np.concatenate(list(gt_targets.values()), axis=0),
-                np.concatenate(list(pred_scores.values()), axis=0),
-                class_names = cfg.DATA.CLASS_NAMES
-            )
-            if cfg.MODEL.LSTR.V_N_CLASSIFIER:
-                result_verb = compute_result[cfg.EVALUATION.METHOD](
-                    cfg,
-                    np.concatenate(list(vrb_target.values()), axis=0),
-                    np.concatenate(list(pred_scores_verb.values()), axis=0),
-                    class_names = cfg.DATA.VERB_NAMES,
-                )
-                result_noun = compute_result[cfg.EVALUATION.METHOD](
-                    cfg,
-                    np.concatenate(list(nn_target.values()), axis=0),
-                    np.concatenate(list(pred_scores_noun.values()), axis=0),
-                    class_names = cfg.DATA.NOUN_NAMES
-                )
-        else:
-            print("Computing only Take/Release results")
+        print("Computing all results")
+        result_det = compute_result[cfg.EVALUATION.METHOD](
+            cfg,
+            np.concatenate(list(gt_targets.values()), axis=0),
+            np.concatenate(list(pred_scores.values()), axis=0),
+            class_names = cfg.DATA.CLASS_NAMES
+        )
+        if cfg.MODEL.LSTR.V_N_CLASSIFIER:
             result_verb = compute_result[cfg.EVALUATION.METHOD](
                 cfg,
                 np.concatenate(list(vrb_target.values()), axis=0),
                 np.concatenate(list(pred_scores_verb.values()), axis=0),
                 class_names = cfg.DATA.VERB_NAMES,
-                ignore_index = [0] if not cfg.DATA.TK_ONLY else [0, *list(range(3, cfg.DATA.NUM_VERBS))]
             )
-            result_det = {"mp_mAP": 0.0, "mean_AP": 0.0}
-            result_noun = {"mp_mAP": 0.0, "mean_AP": 0.0}
+            result_noun = compute_result[cfg.EVALUATION.METHOD](
+                cfg,
+                np.concatenate(list(nn_target.values()), axis=0),
+                np.concatenate(list(pred_scores_noun.values()), axis=0),
+                class_names = cfg.DATA.NOUN_NAMES
+            )
         if cfg.EVALUATION.METHOD == "perpoint":
             if cfg.MODEL.LSTR.V_N_CLASSIFIER:
                 logger.info(f'Action perframe detection m{cfg.DATA.METRICS}: {result_det["mp_mAP"]:.5f},\
