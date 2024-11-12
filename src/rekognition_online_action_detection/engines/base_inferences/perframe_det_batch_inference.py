@@ -44,15 +44,13 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
             score = model(*[x.to(device) for x in data[:-4]])
             if cfg.MODEL.LSTR.V_N_CLASSIFIER:
                 score, score_verb, score_noun = score
-                score = score.cpu().numpy()
-                score_verb = score_verb.cpu().numpy()
-                score_noun = score_noun.cpu().numpy()
+                score = score.softmax(dim=-1).cpu().numpy()
+                score_verb = score_verb.softmax(dim=-1).cpu().numpy()
+                score_noun = score_noun.softmax(dim=-1).cpu().numpy()
                 cfg.DATA.NUM_VERBS = 126 if cfg.DATA.DATA_NAME == 'EK55' else 98 if not cfg.DATA.TK_ONLY else cfg.DATA.NUM_VERBS
                 cfg.DATA.NUM_NOUNS = 353 if cfg.DATA.DATA_NAME == 'EK55' else 301 if not cfg.DATA.TK_ONLY else cfg.DATA.NUM_NOUNS
             else:
-                score = (score.cpu().numpy()
-                         if cfg.DATA.DATA_NAME.startswith('EK')
-                         else score.softmax(dim=-1).cpu().numpy())
+                score = score.softmax(dim=-1).cpu().numpy()
             for bs, (session, query_indices, num_frames) in enumerate(zip(*data[-3:])):
                 if session not in pred_scores:
                     if cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES > 0:
