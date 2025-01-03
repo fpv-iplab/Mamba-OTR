@@ -72,6 +72,11 @@ def assert_and_infer_cfg(cfg, args):
     assert cfg.INPUT.MODALITY in ['visual', 'motion', 'object',
                                   'visual+motion', 'visual+motion+object']
 
+    # Output assertions
+    assert cfg.OUTPUT.MODALITY in ["verb", "noun", "action"]
+    if not cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY != "action":
+        cfg.OUTPUT.MODALITY = "action" #! default to action if V-N classifier is not used and output is wrongly set to verb/noun
+
     # Infer memory
     if cfg.MODEL.MODEL_NAME in ['LSTR']:
         cfg.MODEL.LSTR.AGES_MEMORY_LENGTH = cfg.MODEL.LSTR.AGES_MEMORY_SECONDS * cfg.DATA.FPS

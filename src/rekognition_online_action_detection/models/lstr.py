@@ -43,6 +43,7 @@ class LSTR(nn.Module):
         self.num_classes = cfg.DATA.NUM_CLASSES
 
         self.use_v_n = cfg.MODEL.LSTR.V_N_CLASSIFIER
+        self.out_modality = cfg.OUTPUT.MODALITY
 
         self.encoder_attention_type = cfg.MODEL.LSTR.ENC_ATTENTION_TYPE
         self.decay_alpha = cfg.MODEL.LSTR.ENC_ATTENTION_DECAY
@@ -131,10 +132,12 @@ class LSTR(nn.Module):
                 self.dropout_cls_n = nn.Dropout(cfg.MODEL.LSTR.DROPOUT_CLS)
         else:
             self.dropout_cls = None
-        if cfg.MODEL.LSTR.FC_NORM:
-            self.classifier = NormalizedLinear(self.d_model, self.num_classes)
-        else:
-            self.classifier = nn.Linear(self.d_model, self.num_classes)
+
+        if self.out_modality == "action":
+            if cfg.MODEL.LSTR.FC_NORM:
+                self.classifier = NormalizedLinear(self.d_model, self.num_classes)
+            else:
+                self.classifier = nn.Linear(self.d_model, self.num_classes)
 
         if self.use_v_n:
             a_to_v = action_to_verb_map(cfg.DATA.EK_EXT_PATH,
@@ -143,12 +146,16 @@ class LSTR(nn.Module):
             a_to_n = action_to_noun_map(cfg.DATA.EK_EXT_PATH,
                                         action_offset=True,
                                         noun_offset=True)
-            num_verbs = max(set(a_to_v.values())) + 1 if not cfg.DATA.TK_ONLY else 3
-            num_nouns = max(set(a_to_n.values())) + 1
-            print('Number of verbs (inc. 0):', num_verbs)
-            print('Number of nouns (inc. 0):', num_nouns)
-            self.classifier_verb = nn.Linear(self.d_model, num_verbs)
-            self.classifier_noun = nn.Linear(self.d_model, num_nouns)
+
+            if self.out_modality in ["action", "verb"]:
+                num_verbs = max(set(a_to_v.values())) + 1 if not cfg.DATA.TK_ONLY else 3
+                print('Number of verbs (inc. 0):', num_verbs)
+                self.classifier_verb = nn.Linear(self.d_model, num_verbs)
+
+            if self.out_modality in ["action", "noun"]:
+                num_nouns = max(set(a_to_n.values())) + 1
+                print('Number of nouns (inc. 0):', num_nouns)
+                self.classifier_noun = nn.Linear(self.d_model, num_nouns)
 
         self.pred_future = 'PRED_FUTURE' in list(zip(*cfg.MODEL.CRITERIONS))[0]
 
@@ -301,15 +308,26 @@ class LSTR(nn.Module):
             output_a = self.dropout_cls(output)
         else:
             output_a = output
-        score = self.classifier(output_a)
-        score = score.transpose(0, 1)
+
+        if self.out_modality == "action":
+            score = self.classifier(output_a)
+            score = score.transpose(0, 1)
 
         if self.use_v_n:
-            output_v = self.dropout_cls_v(output)
-            output_n = self.dropout_cls_n(output)
-            score_verb = self.classifier_verb(output_v).transpose(0, 1)
-            score_noun = self.classifier_noun(output_n).transpose(0, 1)
-            score = (score, score_verb, score_noun)
+            if self.out_modality in ["action", "verb"]:
+                output_v = self.dropout_cls_v(output)
+                score_verb = self.classifier_verb(output_v).transpose(0, 1)
+            if self.out_modality in ["action", "noun"]:
+                output_n = self.dropout_cls_n(output)
+                score_noun = self.classifier_noun(output_n).transpose(0, 1)
+
+            if self.out_modality == "action":
+                score = (score, score_verb, score_noun)
+            else:
+                if self.out_modality == "verb":
+                    score = score_verb
+                if self.out_modality == "noun":
+                    score = score_noun
         if self.pred_future:
             return (score,
                     all_outputs_decoded[1: self.work_memory_num_samples + 1, ...],
