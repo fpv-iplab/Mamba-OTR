@@ -13,7 +13,7 @@ def test(cfg):
     # Setup configurations
     device = setup_environment(cfg)
     checkpointer = setup_checkpointer(cfg, phase='test')
-    logger = setup_logger(cfg, phase='test')
+    logger = setup_logger(cfg, phase='test', quiet=True)
 
     # Build model
     model = build_model(cfg, device)

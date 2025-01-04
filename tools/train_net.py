@@ -17,7 +17,7 @@ def train(cfg):
     # Setup configurations
     device = setup_environment(cfg)
     checkpointer = setup_checkpointer(cfg, phase='train')
-    logger = setup_logger(cfg, phase='train')
+    logger = setup_logger(cfg, phase='train', quiet=True)
 
     # Build data loaders
     data_loaders = {
