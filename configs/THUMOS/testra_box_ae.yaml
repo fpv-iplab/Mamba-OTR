@@ -1,8 +1,5 @@
 DATA:
   DATA_NAME: 'THUMOS'
-  METRICS: "pAP"
-EVALUATION:
-  METHOD: "perpoint"
 INPUT:
   MODALITY: 'twostream'
   VISUAL_FEATURE: 'rgb_kinetics_resnet50'

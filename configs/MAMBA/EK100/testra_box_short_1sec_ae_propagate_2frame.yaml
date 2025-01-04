@@ -3,10 +3,7 @@ DATA:
   CLIP_MIXUP_RATE: 0.5
   CLIP_MIXUP_SAMPLE: 'uniform'
   EK_EXT_PATH: 'external/rulstm/RULSTM/data/ek100/'
-  METRICS: "pAP"
   TK_ONLY: False
-EVALUATION:
-  METHOD: "perpoint"
 INPUT:
   MODALITY: 'twostream'
   VISUAL_FEATURE: 'rgb_kinetics_bninception'
@@ -30,8 +27,6 @@ MODEL:
     LONG_MEMORY_INCLUDE_WORK: False
     WORK_MEMORY_SECONDS: 1
     WORK_MEMORY_SAMPLE_RATE: 1
-    ANTICIPATION_SECONDS: 0   #* Necessary to remove the anticipation module
-    ANTICIPATION_SAMPLE_RATE: 1
     ENC_MODULE: [
       [16, 1, True], [16, 2, True]
     ]
