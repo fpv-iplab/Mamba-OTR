@@ -77,6 +77,11 @@ def assert_and_infer_cfg(cfg, args):
     if not cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY != "action":
         cfg.OUTPUT.MODALITY = "action" #! default to action if V-N classifier is not used and output is wrongly set to verb/noun
 
+    if cfg.OUTPUT.MODALITY == "verb":
+        cfg.INPUT.TARGET_PERFRAME = cfg.INPUT.TARGET_PERFRAME.replace('target', 'verb' if not cfg.DATA.TK_ONLY else "verb_tk")
+    if cfg.OUTPUT.MODALITY == "noun":
+        cfg.INPUT.TARGET_PERFRAME = cfg.INPUT.TARGET_PERFRAME.replace('target', 'noun' if not cfg.DATA.TK_ONLY else "noun_tk")
+
     # Infer memory
     if cfg.MODEL.MODEL_NAME in ['LSTR']:
         cfg.MODEL.LSTR.AGES_MEMORY_LENGTH = cfg.MODEL.LSTR.AGES_MEMORY_SECONDS * cfg.DATA.FPS

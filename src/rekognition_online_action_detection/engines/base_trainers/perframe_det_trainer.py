@@ -89,17 +89,31 @@ def do_perframe_det_train(cfg,
                     else:
                         det_score = model(*[x.to(device) for x in data[:-1]])
 
+
                     if cfg.MODEL.LSTR.V_N_CLASSIFIER:
-                        det_score, verb_score, noun_score = det_score
+                        det_score, verb_score, noun_score = det_score 
                     else:
                         verb_score, noun_score = None, None
 
-                    if cfg.MODEL.LSTR.LOSS_ANTICIPATE_ONLY:
-                        det_score = det_score[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
-                        det_target = det_target[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
-                    det_score = det_score.reshape(-1, cfg.DATA.NUM_CLASSES)
-                    det_target = det_target.reshape(-1, cfg.DATA.NUM_CLASSES)
-                    det_loss = criterion[loss_names[0]](det_score, det_target)
+                    # if cfg.MODEL.LSTR.LOSS_ANTICIPATE_ONLY:
+                    #     det_score = det_score[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
+                    #     det_target = det_target[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
+
+                    #! FIX for support verb and noun only (change the det_target to be verb_target or noun_target if needed)
+                    if cfg.OUTPUT.MODALITY == "action":
+                        reshape_size = cfg.DATA.NUM_CLASSES
+                    elif cfg.OUTPUT.MODALITY == "verb":
+                        reshape_size = cfg.DATA.NUM_VERBS
+                    elif cfg.OUTPUT.MODALITY == "noun":
+                        reshape_size = cfg.DATA.NUM_NOUNS
+
+                    det_score = det_score.reshape(-1, reshape_size)
+                    det_target = det_target.reshape(-1, reshape_size)
+
+                    if cfg.OUTPUT.MODALITY == "action":
+                        det_loss = criterion[loss_names[0]](det_score, det_target)
+                    else:
+                        det_loss = criterion["MCE"](det_score, det_target)
                     det_losses[phase] += det_loss.item() * batch_size
 
                     if 'PRED_FUTURE' in list(zip(*cfg.MODEL.CRITERIONS))[0]:
@@ -107,19 +121,22 @@ def do_perframe_det_train(cfg,
                         pred_losses[phase] += pred_loss.item() * batch_size
 
                     if cfg.MODEL.LSTR.V_N_CLASSIFIER:
-                        if cfg.MODEL.LSTR.LOSS_ANTICIPATE_ONLY:
-                            verb_score = verb_score[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
-                            verb_target = verb_target[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
-                            noun_score = noun_score[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
-                            noun_target = noun_target[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
-                        verb_score = verb_score.reshape(-1, verb_score.shape[-1])
-                        noun_score = noun_score.reshape(-1, noun_score.shape[-1])
-                        verb_target = verb_target.reshape(-1, verb_target.shape[-1])
-                        noun_target = noun_target.reshape(-1, noun_target.shape[-1])
-                        verb_loss = criterion['MCE'](verb_score, verb_target)
-                        noun_loss = criterion['MCE'](noun_score, noun_target)
-                        verb_losses[phase] += verb_loss.item() * batch_size
-                        noun_losses[phase] += noun_loss.item() * batch_size
+                        # if cfg.MODEL.LSTR.LOSS_ANTICIPATE_ONLY:
+                        #     verb_score = verb_score[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
+                        #     verb_target = verb_target[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
+                        #     noun_score = noun_score[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
+                        #     noun_target = noun_target[:, -cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES:, :]
+                        if cfg.OUTPUT.MODALITY == "action":
+                            verb_score = verb_score.reshape(-1, cfg.DATA.NUM_VERBS)
+                            verb_target = verb_target.reshape(-1, cfg.DATA.NUM_VERBS)
+                            verb_loss = criterion['MCE'](verb_score, verb_target)
+                            verb_losses[phase] += verb_loss.item() * batch_size
+
+                        if cfg.OUTPUT.MODALITY == "action":
+                            noun_score = noun_score.reshape(-1, cfg.DATA.NUM_NOUNS)
+                            noun_target = noun_target.reshape(-1, cfg.DATA.NUM_NOUNS)
+                            noun_loss = criterion['MCE'](noun_score, noun_target)
+                            noun_losses[phase] += noun_loss.item() * batch_size
 
                     # Output log for current batch
                     pbar.set_postfix({
@@ -132,7 +149,7 @@ def do_perframe_det_train(cfg,
                         loss = det_loss
                         if 'PRED_FUTURE' in list(zip(*cfg.MODEL.CRITERIONS))[0]:
                             loss += pred_loss
-                        if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                        if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
                             loss += noun_loss + verb_loss
                         if loss.item() != 0:
                             loss.backward()
@@ -140,7 +157,7 @@ def do_perframe_det_train(cfg,
                             scheduler.step()
                     else:
                         # Prepare for evaluation
-                        if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                        if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
                             verb_score = verb_score.softmax(dim=1).cpu().tolist()
                             noun_score = noun_score.softmax(dim=1).cpu().tolist()
                             verb_target = verb_target.cpu().tolist()
@@ -158,14 +175,15 @@ def do_perframe_det_train(cfg,
         # Output log for current epoch
         log = []
         log.append('Epoch {:2}'.format(epoch))
-        log.append('train det_loss: {:.5f}'.format(
+        text = "det" if cfg.OUTPUT.MODALITY == "action" else cfg.OUTPUT.MODALITY
+        log.append('train {}_loss: {:.5f}'.format(text,
             det_losses['train'] / len(data_loaders['train'].dataset),
         ))
-        if 'PRED_FUTURE' in list(zip(*cfg.MODEL.CRITERIONS))[0]:
-            log.append('train pred_loss: {:.5f}'.format(
-                pred_losses['train'] / len(data_loaders['train'].dataset),
-            ))
-        if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+        # if 'PRED_FUTURE' in list(zip(*cfg.MODEL.CRITERIONS))[0]:
+        #     log.append('train pred_loss: {:.5f}'.format(
+        #         pred_losses['train'] / len(data_loaders['train'].dataset),
+        #     ))
+        if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
             log.append('train verb_loss: {:.5f}'.format(
                 verb_losses['train'] / len(data_loaders['train'].dataset),
             ))
@@ -174,7 +192,7 @@ def do_perframe_det_train(cfg,
             ))
         if 'test' in cfg.SOLVER.PHASES:
             # Compute result
-            if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+            if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
                 verb_result = compute_result[cfg.EVALUATION.METHOD](
                     cfg,
                     verb_gt_targets,
@@ -187,23 +205,32 @@ def do_perframe_det_train(cfg,
                     noun_pred_scores,
                     class_names=cfg.DATA.NOUN_NAMES,
                 )
+
+            if cfg.OUTPUT.MODALITY == "verb":
+                class_names = cfg.DATA.VERB_NAMES
+            elif cfg.OUTPUT.MODALITY == "noun":
+                class_names = cfg.DATA.NOUN_NAMES
+            else:
+                class_names = cfg.DATA.CLASS_NAMES
+
             det_result = compute_result[cfg.EVALUATION.METHOD](
                 cfg,
                 det_gt_targets,
                 det_pred_scores,
-                class_names=cfg.DATA.CLASS_NAMES,
+                class_names=class_names,
             )
+
             if cfg.EVALUATION.METHOD == "perpoint":
-                log.append('test det_loss: {:.5f} det_mp_mAP: {:.5f}'.format(
+                log.append('test {}_loss: {:.5f} det_mp_mAP: {:.5f}'.format(text,
                     det_losses['test'] / len(data_loaders['test'].dataset),
                     det_result['mp_mAP'],
                 ))
             else:
-                log.append('test det_loss: {:.5f} det_mAP: {:.5f}'.format(
+                log.append('test {}_loss: {:.5f} det_mAP: {:.5f}'.format(text,
                     det_losses['test'] / len(data_loaders['test'].dataset),
                     det_result['mean_AP'],
                 ))
-            if cfg.MODEL.LSTR.V_N_CLASSIFIER:
+            if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
                 log.append('test verb_loss: {:.5f}'.format(
                     verb_losses['test'] / len(data_loaders['test'].dataset),
                 ))
@@ -232,12 +259,12 @@ def do_perframe_det_train(cfg,
         # Save checkpoint for model and optimizer
         if epoch % cfg.SOLVER.SAVE_EVERY == 0:
             if cfg.EVALUATION.METHOD == "perpoint":
-                if cfg.DATA.TK_ONLY and cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                if cfg.DATA.TK_ONLY and cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
                     checkpointer.save(epoch, model, optimizer, verb_result['mp_mAP'])
                 else:
                     checkpointer.save(epoch, model, optimizer, det_result['mp_mAP'])
             else:
-                if cfg.DATA.TK_ONLY and cfg.MODEL.LSTR.V_N_CLASSIFIER:
+                if cfg.DATA.TK_ONLY and cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
                     checkpointer.save(epoch, model, optimizer, verb_result['mean_AP'])
                 else:
                     checkpointer.save(epoch, model, optimizer, det_result['mean_AP'])

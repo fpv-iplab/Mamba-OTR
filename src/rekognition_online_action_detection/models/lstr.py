@@ -325,9 +325,9 @@ class LSTR(nn.Module):
                 score = (score, score_verb, score_noun)
             else:
                 if self.out_modality == "verb":
-                    score = score_verb
+                    score = (score_verb, score_verb, score_verb)
                 if self.out_modality == "noun":
-                    score = score_noun
+                    score = (score_noun, score_noun, score_noun)
         if self.pred_future:
             return (score,
                     all_outputs_decoded[1: self.work_memory_num_samples + 1, ...],
