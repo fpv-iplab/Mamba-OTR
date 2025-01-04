@@ -27,6 +27,7 @@ def train(cfg):
 
     # Build model
     model = build_model(cfg, device)
+    logger.info("")
     logger.info("MODEL STRUCTURE:")
     logger.info(model)
     logger.info("")
