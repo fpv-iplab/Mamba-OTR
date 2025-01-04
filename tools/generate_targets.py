@@ -1,25 +1,10 @@
 import os
-import multiprocessing
-
-import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
-import warnings
-warnings.filterwarnings("ignore")
-
-from tools.test_net import test
-from tools.train_net import train
-from rekognition_online_action_detection.utils.parser import load_cfg
-from rekognition_online_action_detection.utils.actionstartend_utils import target_perframe_to_actionstartend, reduce_take_put as reduce
+from src.rekognition_online_action_detection.utils.actionstartend_utils import target_perframe_to_actionstartend, reduce_take_put as reduce
 
 
 
 
-
-def main(cfg):
-    cpu_count = multiprocessing.cpu_count() - 2
-    cfg.DATA_LOADER.NUM_WORKERS = max(cfg.DATA_LOADER.NUM_WORKERS, cpu_count)
-    print("Using {} workers for data loading".format(cfg.DATA_LOADER.NUM_WORKERS))
-
+def generate_target(cfg):
     isEK = "ek" in cfg.DATA.DATA_NAME.lower()
     targetPath = os.path.join(cfg.DATA.DATA_ROOT, cfg.INPUT.TARGET_PERFRAME)
     task = "start" in targetPath
@@ -63,16 +48,3 @@ def main(cfg):
 
             inputPath = targetPath.replace("start_", "") if task else targetPath.replace("end_", "")
             target_perframe_to_actionstartend(inputPath, targetPath, type="start" if task else "end")
-
-    if cfg.TRAIN:
-        print("Training model")
-        train(cfg)
-
-    if cfg.TEST:
-        print("Testing model")
-        test(cfg)
-
-
-
-if __name__ == "__main__":
-    main(load_cfg())

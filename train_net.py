@@ -1,6 +1,12 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+import sys
+import warnings
+warnings.filterwarnings("ignore")
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
+
 from rekognition_online_action_detection.utils.parser import load_cfg
 from rekognition_online_action_detection.utils.env import setup_environment
 from rekognition_online_action_detection.utils.checkpointer import setup_checkpointer
@@ -11,10 +17,12 @@ from rekognition_online_action_detection.criterions import build_criterion
 from rekognition_online_action_detection.optimizers import build_optimizer
 from rekognition_online_action_detection.optimizers import build_scheduler
 from rekognition_online_action_detection.engines import do_train
+from tools.generate_targets import generate_target
 
 
 def train(cfg):
     # Setup configurations
+    generate_target(cfg)
     device = setup_environment(cfg)
     checkpointer = setup_checkpointer(cfg, phase='train')
     logger = setup_logger(cfg, phase='train')
