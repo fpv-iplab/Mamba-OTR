@@ -152,10 +152,7 @@ class LSTR(nn.Module):
         self.pred_future = 'PRED_FUTURE' in list(zip(*cfg.MODEL.CRITERIONS))[0]
 
         total_param = sum([p.numel() for p in self.parameters()])
-        print()
-        print(self)
         print(f"Total parameters: {total_param / 10**6:.2f} M", flush=True)
-        print()
 
 
     def forward(self, visual_inputs, motion_inputs, object_inputs, memory_key_padding_mask=None):
