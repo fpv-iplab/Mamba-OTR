@@ -99,15 +99,15 @@ class LSTRDataLayer(data.Dataset):
                 else:
                     verb_target = target
                     noun_target = target
-                seed = np.random.randint(self.work_memory_length + self.anticipation_length) if self.training else 0
+                seed = np.random.randint(self.work_memory_length) if self.training else 0
                 for work_start, work_end in zip(
-                    range(seed, target.shape[0], self.work_memory_length + self.anticipation_length),
-                    range(seed + self.work_memory_length, target.shape[0] - self.anticipation_length, self.work_memory_length + self.anticipation_length)):
+                    range(seed, target.shape[0], self.work_memory_length),
+                    range(seed + self.work_memory_length, target.shape[0], self.work_memory_length)):
                     self.inputs.append([
                         session, work_start, work_end,
-                        target[work_start: work_end + self.anticipation_length],
-                        verb_target[work_start: work_end + self.anticipation_length],
-                        noun_target[work_start: work_end + self.anticipation_length],
+                        target[work_start: work_end],
+                        verb_target[work_start: work_end],
+                        noun_target[work_start: work_end],
                         None,
                     ])
 
@@ -294,9 +294,6 @@ class LSTRBatchInferenceDataLayer(data.Dataset):
         self.work_memory_length = cfg.MODEL.LSTR.WORK_MEMORY_LENGTH
         self.work_memory_sample_rate = cfg.MODEL.LSTR.WORK_MEMORY_SAMPLE_RATE
         self.work_memory_num_samples = cfg.MODEL.LSTR.WORK_MEMORY_NUM_SAMPLES
-        self.anticipation_length = cfg.MODEL.LSTR.ANTICIPATION_LENGTH
-        self.anticipation_sample_rate = cfg.MODEL.LSTR.ANTICIPATION_SAMPLE_RATE
-        self.anticipation_num_samples = cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES
 
         assert phase == 'test', 'phase must be `test` for batch inference, got {}'
 
