@@ -48,8 +48,6 @@ class LSTR(nn.Module):
         self.encoder_attention_type = cfg.MODEL.LSTR.ENC_ATTENTION_TYPE
         self.decay_alpha = cfg.MODEL.LSTR.ENC_ATTENTION_DECAY
 
-        self.anticipation_num_samples = cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES
-
         # Build position encoding
         self.pos_encoding = tr.PositionalEncoding(self.d_model, self.dropout)
 
@@ -118,12 +116,6 @@ class LSTR(nn.Module):
                 self.is_mamba = True
             # --------------------------------------
 
-        # Build decode token (for anticipation)
-        if self.anticipation_num_samples > 0:
-            self.dec_query = nn.Embedding(self.anticipation_num_samples, self.d_model)
-        else:
-            self.register_parameter('dec_query', None)
-
         # Build classifier
         if cfg.MODEL.LSTR.DROPOUT_CLS > 0:
             self.dropout_cls = nn.Dropout(cfg.MODEL.LSTR.DROPOUT_CLS)
@@ -160,7 +152,10 @@ class LSTR(nn.Module):
         self.pred_future = 'PRED_FUTURE' in list(zip(*cfg.MODEL.CRITERIONS))[0]
 
         total_param = sum([p.numel() for p in self.parameters()])
+        print()
+        print(self)
         print(f"Total parameters: {total_param / 10**6:.2f} M", flush=True)
+        print()
 
 
     def forward(self, visual_inputs, motion_inputs, object_inputs, memory_key_padding_mask=None):
@@ -230,16 +225,6 @@ class LSTR(nn.Module):
                     padding=self.long_memory_num_samples if self.long_memory_use_pe else 0)
             else:
                 work_memories = work_memories_no_pe
-            if self.dec_query is not None:
-                anticipate_memories = self.pos_encoding(
-                    self.dec_query.weight.unsqueeze(1).repeat(1, work_memories.shape[1], 1),
-                    padding=(self.long_memory_num_samples + self.work_memory_num_samples
-                             if self.long_memory_use_pe else self.work_memory_num_samples))
-                work_memories = torch.cat((work_memories, anticipate_memories), dim=0)
-            # work_memories = self.feature_head_work(
-            #     visual_inputs[:, self.long_memory_num_samples:],
-            #     motion_inputs[:, self.long_memory_num_samples:],
-            # ).transpose(0, 1)
 
 
             # Build mask
@@ -429,12 +414,6 @@ class LSTRStream(LSTR):
                 work_object_inputs,
             ).transpose(0, 1),
             padding=self.long_memory_num_samples if self.long_memory_use_pe else 0)
-            if self.dec_query is not None:
-                anticipate_memories = self.pos_encoding(
-                    self.dec_query.weight.unsqueeze(1).repeat(1, work_memories.shape[1], 1),
-                    padding=(self.long_memory_num_samples + self.work_memory_num_samples
-                             if self.long_memory_use_pe else  self.work_memory_num_samples))
-                work_memories = torch.cat((work_memories, anticipate_memories))
 
             # Build mask
             mask = tr.generate_square_subsequent_mask(

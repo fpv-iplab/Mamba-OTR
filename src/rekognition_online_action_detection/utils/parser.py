@@ -59,11 +59,6 @@ def assert_and_infer_cfg(cfg, args):
     cfg.DATA.TRAIN_SESSION_SET = data_info['train_session_set'] if cfg.DATA.TRAIN_SESSION_SET is None else cfg.DATA.TRAIN_SESSION_SET
     cfg.DATA.TEST_SESSION_SET = data_info['test_session_set'] if cfg.DATA.TEST_SESSION_SET is None else cfg.DATA.TEST_SESSION_SET
 
-    # Ignore two mis-labeled videos
-    if False and cfg.DATA_NAME == 'THUMOS':
-        cfg.DATA.TEST_SESSION_SET.remove('video_test_0000270')
-        cfg.DATA.TEST_SESSION_SET.remove('video_test_0001496')
-
     # Input assertions
     if cfg.INPUT.MODALITY == 'twostream':
         cfg.INPUT.MODALITY = 'visual+motion'
@@ -91,11 +86,9 @@ def assert_and_infer_cfg(cfg, args):
             cfg.MODEL.LSTR.AGES_MEMORY_LENGTH + \
             cfg.MODEL.LSTR.LONG_MEMORY_LENGTH + \
             cfg.MODEL.LSTR.WORK_MEMORY_LENGTH
-        cfg.MODEL.LSTR.ANTICIPATION_LENGTH = cfg.MODEL.LSTR.ANTICIPATION_SECONDS * cfg.DATA.FPS
         assert cfg.MODEL.LSTR.AGES_MEMORY_LENGTH % cfg.MODEL.LSTR.AGES_MEMORY_SAMPLE_RATE == 0
         assert cfg.MODEL.LSTR.LONG_MEMORY_LENGTH % cfg.MODEL.LSTR.LONG_MEMORY_SAMPLE_RATE == 0
         assert cfg.MODEL.LSTR.WORK_MEMORY_LENGTH % cfg.MODEL.LSTR.WORK_MEMORY_SAMPLE_RATE == 0
-        assert cfg.MODEL.LSTR.ANTICIPATION_LENGTH == 0 or cfg.MODEL.LSTR.ANTICIPATION_LENGTH % cfg.MODEL.LSTR.ANTICIPATION_SAMPLE_RATE == 0
         cfg.MODEL.LSTR.AGES_MEMORY_NUM_SAMPLES = cfg.MODEL.LSTR.AGES_MEMORY_LENGTH // cfg.MODEL.LSTR.AGES_MEMORY_SAMPLE_RATE
         cfg.MODEL.LSTR.LONG_MEMORY_NUM_SAMPLES = cfg.MODEL.LSTR.LONG_MEMORY_LENGTH // cfg.MODEL.LSTR.LONG_MEMORY_SAMPLE_RATE
         cfg.MODEL.LSTR.WORK_MEMORY_NUM_SAMPLES = cfg.MODEL.LSTR.WORK_MEMORY_LENGTH // cfg.MODEL.LSTR.WORK_MEMORY_SAMPLE_RATE
@@ -103,7 +96,6 @@ def assert_and_infer_cfg(cfg, args):
             cfg.MODEL.LSTR.AGES_MEMORY_NUM_SAMPLES + \
             cfg.MODEL.LSTR.LONG_MEMORY_NUM_SAMPLES + \
             cfg.MODEL.LSTR.WORK_MEMORY_NUM_SAMPLES
-        cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES = cfg.MODEL.LSTR.ANTICIPATION_LENGTH // cfg.MODEL.LSTR.ANTICIPATION_SAMPLE_RATE
 
         assert cfg.MODEL.LSTR.INFERENCE_MODE in ['batch', 'stream']
 

@@ -37,9 +37,6 @@ class LSTRDataLayer(data.Dataset):
         self.work_memory_length = cfg.MODEL.LSTR.WORK_MEMORY_LENGTH
         self.work_memory_sample_rate = cfg.MODEL.LSTR.WORK_MEMORY_SAMPLE_RATE
         self.work_memory_num_samples = cfg.MODEL.LSTR.WORK_MEMORY_NUM_SAMPLES
-        self.anticipation_length = cfg.MODEL.LSTR.ANTICIPATION_LENGTH
-        self.anticipation_sample_rate = cfg.MODEL.LSTR.ANTICIPATION_SAMPLE_RATE
-        self.anticipation_num_samples = cfg.MODEL.LSTR.ANTICIPATION_NUM_SAMPLES
         self.training = phase == 'train'
 
         self._init_dataset()
@@ -80,18 +77,17 @@ class LSTRDataLayer(data.Dataset):
                 for segment in segments_per_session.iterrows():
                     start_tick = int(segment[1]['start_f'] / 30 * self.cfg.DATA.FPS)
                     end_tick = int(segment[1]['end_f'] / 30 * self.cfg.DATA.FPS)
-                    start_tick += np.random.randint(self.anticipation_length) if self.training and self.anticipation_length > 0 else 0
                     start_tick = min(start_tick, end_tick)
-                    work_end = start_tick - self.anticipation_length
+                    work_end = start_tick
                     work_start = work_end - self.work_memory_length
                     segments_before_current = segments_per_session[segments_per_session['end_f'] < segment[1]['start_f']]
                     if work_start < 0:
                         continue
                     self.inputs.append([
                         session, work_start, work_end,
-                        target[work_start: work_end + self.anticipation_length],
-                        verb_target[work_start: work_end + self.anticipation_length],
-                        noun_target[work_start: work_end + self.anticipation_length],
+                        target[work_start: work_end],
+                        verb_target[work_start: work_end],
+                        noun_target[work_start: work_end],
                         segments_before_current,
                     ])
         else:
@@ -114,11 +110,6 @@ class LSTRDataLayer(data.Dataset):
                         noun_target[work_start: work_end + self.anticipation_length],
                         None,
                     ])
-                # seed = np.random.randint(target.shape[0] - self.work_memory_length) if self.training else 0
-                # work_start, work_end = seed, seed + self.work_memory_length
-                # self.inputs.append([
-                #     session, work_start, work_end, target[work_start: work_end],
-                # ])
 
 
 
@@ -147,14 +138,14 @@ class LSTRDataLayer(data.Dataset):
 
         # Get target
         target = np.concatenate((target[:self.work_memory_length:self.work_memory_sample_rate],
-                                 target[self.work_memory_length::self.anticipation_sample_rate]),
+                                 target[self.work_memory_length::]),
                                  axis=0)
         if self.cfg.MODEL.LSTR.V_N_CLASSIFIER:
             verb_target = np.concatenate((verb_target[:self.work_memory_length:self.work_memory_sample_rate],
-                                          verb_target[self.work_memory_length::self.anticipation_sample_rate]),
+                                          verb_target[self.work_memory_length::]),
                                           axis=0)
             noun_target = np.concatenate((noun_target[:self.work_memory_length:self.work_memory_sample_rate],
-                                          noun_target[self.work_memory_length::self.anticipation_sample_rate]),
+                                          noun_target[self.work_memory_length::]),
                                           axis=0)
 
         # Get work memory
@@ -229,20 +220,6 @@ class LSTRDataLayer(data.Dataset):
                         long_motion_inputs[sel_indices] = new_motion_inputs[new_start_tick + shift:new_start_tick + shift + len(sel_indices)]
                         long_object_inputs[sel_indices] = new_object_inputs[new_start_tick + shift:new_start_tick + shift + len(sel_indices)]
 
-                        # new_visual_inputs = np.load(
-                        #     osp.join(self.data_root, self.visual_feature, 'segments', new_vid, '{}_{:06d}_{:06d}.npy'.format(new_vid, new_start_tick, new_end_tick)), mmap_mode='r')
-                        # new_motion_inputs = np.load(
-                        #     osp.join(self.data_root, self.motion_feature, 'segments', new_vid, '{}_{:06d}_{:06d}.npy'.format(new_vid, new_start_tick, new_end_tick)), mmap_mode='r')
-                        # new_object_inputs = np.load(
-                        #     osp.join(self.data_root, self.object_feature, 'segments', new_vid, '{}_{:06d}_{:06d}.npy'.format(new_vid, new_start_tick, new_end_tick)), mmap_mode='r')
-
-                        # sel_indices = np.where((long_indices >= old_start_tick) & (long_indices <= old_end_tick))
-
-                        # shift = np.random.randint(new_end_tick - new_start_tick - len(sel_indices) + 1)
-                        # long_visual_inputs[sel_indices] = new_visual_inputs[shift:shift + len(sel_indices)]
-                        # long_motion_inputs[sel_indices] = new_motion_inputs[shift:shift + len(sel_indices)]
-                        # long_object_inputs[sel_indices] = new_object_inputs[shift:shift + len(sel_indices)]
-
             # Get memory key padding mask
             memory_key_padding_mask = np.zeros(long_indices.shape[0])
             last_zero = bisect_right(long_indices, 0) - 1
@@ -273,24 +250,6 @@ class LSTRDataLayer(data.Dataset):
         fusion_object_inputs = torch.as_tensor(fusion_object_inputs.astype(np.float32))
         target = torch.as_tensor(target.astype(np.float32))
         if self.cfg.MODEL.LSTR.V_N_CLASSIFIER:
-            # a_to_v = action_to_verb_map(self.cfg.DATA.EK_EXT_PATH,
-            #                             action_offset=True,
-            #                             verb_offset=True)
-            # a_to_n = action_to_noun_map(self.cfg.DATA.EK_EXT_PATH,
-            #                             action_offset=True,
-            #                             noun_offset=True)
-            # num_verbs = max(set(a_to_v.values())) + 1
-            # num_nouns = max(set(a_to_n.values())) + 1
-            # verb_target = torch.zeros(target.shape[0], num_verbs)
-            # noun_target = torch.zeros(target.shape[0], num_nouns)
-            # for i in range(verb_target.shape[0]):
-            #     for j in torch.nonzero(target[i]):
-            #         if j.item() == 0: continue
-            #         verb_target[i, a_to_v[j.item()]] = 1
-            # for i in range(noun_target.shape[0]):
-            #     for j in torch.nonzero(target[i]):
-            #         if j.item() == 0: continue
-            #         noun_target[i, a_to_n[j.item()]] = 1
             verb_target = torch.as_tensor(verb_target.astype(np.float32))
             noun_target = torch.as_tensor(noun_target.astype(np.float32))
             target = (target, verb_target, noun_target)
@@ -302,9 +261,6 @@ class LSTRDataLayer(data.Dataset):
             fusion_motion_inputs = fusion_motion_inputs.permute(0, 2, 3, 1)
             fusion_visual_inputs = fusion_visual_inputs.mean((1, 2))
             fusion_motion_inputs = fusion_motion_inputs.mean((1, 2))
-            # memory_key_padding_mask = memory_key_padding_mask[:, None, None]
-            # memory_key_padding_mask = np.tile(memory_key_padding_mask, (1, fusion_visual_inputs.size(1),
-            #                                                             fusion_visual_inputs.size(2)))
 
         if memory_key_padding_mask is not None:
             memory_key_padding_mask = torch.as_tensor(memory_key_padding_mask.astype(np.float32))
