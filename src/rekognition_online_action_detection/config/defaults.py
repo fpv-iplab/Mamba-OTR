@@ -49,9 +49,6 @@ _C.MODEL.LSTR.WORK_MEMORY_USE_PE = True
 _C.MODEL.LSTR.LONG_MEMORY_USE_PE = False
 _C.MODEL.LSTR.LONG_MEMORY_INCLUDE_WORK = False
 _C.MODEL.LSTR.LONG_MEMORY_INCLUDE_WORK2 = False
-# Anticipation choices
-_C.MODEL.LSTR.ANTICIPATION_SECONDS = 0
-_C.MODEL.LSTR.ANTICIPATION_SAMPLE_RATE = 1
 # for EK55/100
 _C.MODEL.LSTR.V_N_CLASSIFIER = False
 _C.MODEL.LSTR.LOSS_ANTICIPATE_ONLY = False
@@ -95,7 +92,6 @@ _C.DATA.NUM_CLASSES = None
 _C.DATA.TK_ONLY = False
 _C.DATA.TK_IDXS = None
 _C.DATA.IGNORE_INDEX = None
-_C.DATA.METRICS = None
 _C.DATA.FPS = None
 _C.DATA.TRAIN_SESSION_SET = None
 _C.DATA.TEST_SESSION_SET = None
@@ -159,12 +155,6 @@ _C.SOLVER.SCHEDULER.WARMUP_METHOD = 'linear'
 # ---------------------------------------------------------------------------- #
 _C.SOLVER.PHASES = ['train', 'test']
 _C.SOLVER.SAVE_EVERY = 1
-
-# ---------------------------------------------------------------------------- #
-# Evaluation
-# ---------------------------------------------------------------------------- #
-_C.EVALUATION = CN()
-_C.EVALUATION.METHOD = 'perpoint'
 
 # ---------------------------------------------------------------------------- #
 # Output

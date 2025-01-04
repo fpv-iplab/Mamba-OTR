@@ -169,13 +169,13 @@ def do_perframe_det_train(cfg,
         if 'test' in cfg.SOLVER.PHASES:
             # Compute result
             if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
-                verb_result = compute_result[cfg.EVALUATION.METHOD](
+                verb_result = compute_result["perpoint"](
                     cfg,
                     verb_gt_targets,
                     verb_pred_scores,
                     class_names=cfg.DATA.VERB_NAMES,
                 )
-                noun_result = compute_result[cfg.EVALUATION.METHOD](
+                noun_result = compute_result["perpoint"](
                     cfg,
                     noun_gt_targets,
                     noun_pred_scores,
@@ -189,16 +189,18 @@ def do_perframe_det_train(cfg,
             else:
                 class_names = cfg.DATA.CLASS_NAMES
 
-            det_result = compute_result[cfg.EVALUATION.METHOD](
+            det_result = compute_result["perpoint"](
                 cfg,
                 det_gt_targets,
                 det_pred_scores,
                 class_names=class_names,
             )
 
-            log.append('test {}_loss: {:.5f} det_mp_mAP: {:.5f}'.format(text,
-                det_losses['test'] / len(data_loaders['test'].dataset),
-                det_result['mp_mAP'],
+            log.append('test {}_loss: {:.5f}'.format(text,
+                det_losses['test'] / len(data_loaders['test'].dataset)
+            ))
+            log.append('{}_mp_mAP: {:.5f}'.format(text,
+                det_result['mp_mAP']
             ))
             if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
                 log.append('test verb_loss: {:.5f}'.format(
