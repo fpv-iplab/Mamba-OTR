@@ -17,7 +17,7 @@ def train(cfg):
     # Setup configurations
     device = setup_environment(cfg)
     checkpointer = setup_checkpointer(cfg, phase='train')
-    logger = setup_logger(cfg, phase='train', quiet=True)
+    logger = setup_logger(cfg, phase='train')
 
     # Build data loaders
     data_loaders = {
@@ -27,6 +27,9 @@ def train(cfg):
 
     # Build model
     model = build_model(cfg, device)
+    logger.info("MODEL STRUCTURE:")
+    logger.info(model)
+    logger.info("")
 
     # Build criterion
     criterion = build_criterion(cfg, device)

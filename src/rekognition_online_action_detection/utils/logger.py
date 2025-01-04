@@ -27,6 +27,6 @@ def setup_logger(cfg, phase, quiet=False):
     logger.addHandler(fh)
 
     if not quiet:
-        logger.info(pprint.pformat(cfg))
+        logger.info(cfg)
 
     return logger

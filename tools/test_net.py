@@ -13,10 +13,13 @@ def test(cfg):
     # Setup configurations
     device = setup_environment(cfg)
     checkpointer = setup_checkpointer(cfg, phase='test')
-    logger = setup_logger(cfg, phase='test', quiet=True)
+    logger = setup_logger(cfg, phase='test')
 
     # Build model
     model = build_model(cfg, device)
+    logger.info("MODEL STRUCTURE:")
+    logger.info(model)
+    logger.info("")
 
     # Load pretrained model
     checkpointer.load(model)
