@@ -166,8 +166,6 @@ _C.SESSION = ''
 # Misc
 # ---------------------------------------------------------------------------- #
 _C.VERBOSE = False
-_C.TRAIN = False
-_C.TEST = False
 
 
 def get_cfg():
