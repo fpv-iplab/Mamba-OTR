@@ -18,9 +18,9 @@ def build_dataset(cfg, phase, tag=''):
     return data_layer(cfg, phase)
 
 
-def build_data_loader(cfg, phase):
+def build_data_loader(cfg, phase, tag):
     data_loader = data.DataLoader(
-        dataset=build_dataset(cfg, phase),
+        dataset=build_dataset(cfg, phase, tag),
         batch_size=cfg.DATA_LOADER.BATCH_SIZE,
         shuffle=True if phase == 'train' else False,
         num_workers=cfg.DATA_LOADER.NUM_WORKERS,
