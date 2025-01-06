@@ -7,11 +7,12 @@ import warnings
 warnings.filterwarnings("ignore")
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
+import torch
 from rekognition_online_action_detection.utils.parser import load_cfg
 from rekognition_online_action_detection.utils.env import setup_environment
 from rekognition_online_action_detection.utils.checkpointer import setup_checkpointer
 from rekognition_online_action_detection.utils.logger import setup_logger
-from rekognition_online_action_detection.datasets import build_data_loader
+from rekognition_online_action_detection.datasets import build_data_loader, build_dataset
 from rekognition_online_action_detection.models import build_model
 from rekognition_online_action_detection.criterions import build_criterion
 from rekognition_online_action_detection.optimizers import build_optimizer
@@ -29,7 +30,7 @@ def train(cfg):
 
     # Build data loaders
     data_loaders = {
-        phase: build_data_loader(cfg, phase)
+        phase: build_data_loader(cfg, phase, tag='BatchInference' if phase == 'test' else '')
         for phase in cfg.SOLVER.PHASES
     }
 

@@ -10,18 +10,7 @@ from rekognition_online_action_detection.datasets import build_dataset
 from rekognition_online_action_detection.evaluation import compute_result
 
 
-def do_perframe_det_batch_inference(cfg, model, device, logger):
-    # Setup model to test mode
-    model.eval()
-    cfg.MODEL.CRITERIONS = [['MCE', {}]]
-    
-    data_loader = torch.utils.data.DataLoader(
-        dataset=build_dataset(cfg, phase='test', tag='BatchInference'),
-        batch_size=cfg.DATA_LOADER.BATCH_SIZE,
-        num_workers=cfg.DATA_LOADER.NUM_WORKERS,
-        pin_memory=cfg.DATA_LOADER.PIN_MEMORY,
-    )
-
+def execute_epoch(cfg, model, device, logger, data_loader):
     # Collect scores and targets
     pred_scores = {}
     pred_scores_verb = {}
@@ -86,6 +75,41 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
                         vrb_target[session][query_indices[-1]] = verb_target[bs][-1]
                         nn_target[session][query_indices[-1]] = noun_target[bs][-1]
 
+
+    if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
+        vrb_target = np.concatenate(list(vrb_target.values()), axis=0)
+        pred_scores_verb = np.concatenate(list(pred_scores_verb.values()), axis=0)
+
+        nn_target = np.concatenate(list(nn_target.values()), axis=0)
+        pred_scores_noun = np.concatenate(list(pred_scores_noun.values()), axis=0)
+    gt_targets = np.concatenate(list(gt_targets.values()), axis=0)
+    pred_scores = np.concatenate(list(pred_scores.values()), axis=0)
+
+    if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
+        return gt_targets, pred_scores, pred_scores_verb, vrb_target, pred_scores_noun, nn_target
+    return gt_targets, pred_scores
+
+
+
+def do_perframe_det_batch_inference(cfg, model, device, logger):
+    # Setup model to test mode
+    model.eval()
+    cfg.MODEL.CRITERIONS = [['MCE', {}]]
+
+    data_loader = torch.utils.data.DataLoader(
+        dataset=build_dataset(cfg, phase='test', tag='BatchInference'),
+        batch_size=cfg.DATA_LOADER.BATCH_SIZE,
+        num_workers=cfg.DATA_LOADER.NUM_WORKERS,
+        pin_memory=cfg.DATA_LOADER.PIN_MEMORY,
+    )
+
+    res = execute_epoch(cfg, model, device, logger, data_loader)
+
+    if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
+        gt_targets, pred_scores, pred_scores_verb,vrb_target, pred_scores_noun, nn_target = res
+    else:
+        gt_targets, pred_scores = res
+
     # Save scores and targets
     # pkl.dump({
     #     'cfg': cfg,
@@ -104,22 +128,22 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
     print("Computing all results")
     result_det = compute_result["perpoint"](
         cfg,
-        np.concatenate(list(gt_targets.values()), axis=0),
-        np.concatenate(list(pred_scores.values()), axis=0),
+        gt_targets,
+        pred_scores,
         class_names = class_names
     )
     if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
         result_verb = compute_result["perpoint"](
             cfg,
-            np.concatenate(list(vrb_target.values()), axis=0),
-            np.concatenate(list(pred_scores_verb.values()), axis=0),
+            vrb_target,
+            pred_scores_verb,
             class_names = cfg.DATA.VERB_NAMES,
         )
         result_noun = compute_result["perpoint"](
             cfg,
-            np.concatenate(list(nn_target.values()), axis=0),
-            np.concatenate(list(pred_scores_noun.values()), axis=0),
-            class_names = cfg.DATA.NOUN_NAMES
+            nn_target,
+            pred_scores_noun,
+            class_names = cfg.DATA.NOUN_NAMES,
         )
 
     if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
