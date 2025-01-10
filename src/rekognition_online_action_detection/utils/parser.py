@@ -23,6 +23,12 @@ def parse_args():
         help='specify visible devices'
     )
     parser.add_argument(
+        "--save",
+        type=str,
+        default="",
+        help="save evaluation outputs to disk",
+    )
+    parser.add_argument(
         'opts',
         default=None,
         nargs='*',
@@ -34,6 +40,7 @@ def parse_args():
 def assert_and_infer_cfg(cfg, args):
     # Setup the visible devices
     cfg.GPU = args.gpu
+    cfg.SAVE = args.save
 
     # Infer data info
     with open(cfg.DATA.DATA_INFO, 'r') as f:

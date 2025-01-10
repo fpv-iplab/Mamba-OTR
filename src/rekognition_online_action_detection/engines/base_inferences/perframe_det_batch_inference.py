@@ -1,6 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 import torch
 import numpy as np
 import pickle as pkl
@@ -76,6 +77,17 @@ def execute_epoch(cfg, model, device, logger, data_loader):
                         vrb_target[session][query_indices[-1]] = verb_target[bs][-1]
                         nn_target[session][query_indices[-1]] = noun_target[bs][-1]
 
+    if cfg.SAVE != "":
+        cfg.SAVE = osp.join(cfg.SAVE, cfg.DATA.DATA_NAME)
+
+        if not osp.exists(cfg.SAVE):
+            os.makedirs(cfg.SAVE)
+
+        for session in pred_scores:
+            np.save(osp.join(cfg.SAVE, f"{cfg.OUTPUT.MODALITY}_{session}.npy"), pred_scores[session])
+            if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
+                np.save(osp.join(cfg.SAVE, f"verb_{session}.npy"), pred_scores_verb[session])
+                np.save(osp.join(cfg.SAVE, f"noun_{session}.npy"), pred_scores_noun[session])
 
     if cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action":
         vrb_target = np.concatenate(list(vrb_target.values()), axis=0)
