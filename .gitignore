@@ -233,3 +233,6 @@ default_launch.yaml
 RESULTS/*
 data/*
 !data/data_info.json
+storage
+.temp/*
+ENIGMA/*
