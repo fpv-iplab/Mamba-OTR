@@ -5,6 +5,7 @@ import torch
 import numpy as np
 import pickle as pkl
 from tqdm import tqdm
+import os.path as osp
 
 from rekognition_online_action_detection.datasets import build_dataset
 from rekognition_online_action_detection.evaluation import compute_result
@@ -111,10 +112,15 @@ def do_perframe_det_batch_inference(cfg, model, device, logger):
         gt_targets, pred_scores = res
 
     # Save scores and targets
+    # toSave = cfg.MODEL.LSTR.V_N_CLASSIFIER and cfg.OUTPUT.MODALITY == "action"
     # pkl.dump({
     #     'cfg': cfg,
     #     'perframe_pred_scores': pred_scores,
     #     'perframe_gt_targets': gt_targets,
+    #     "perframe_pred_scores_verb": pred_scores_verb if toSave else None,
+    #     "perframe_pred_scores_noun": pred_scores_noun if toSave else None,
+    #     "perframe_vrb_target": vrb_target if toSave else None,
+    #     "perframe_nn_target": nn_target if toSave else None
     # }, open(osp.splitext(cfg.MODEL.CHECKPOINT)[0] + '.pkl', 'wb'))
 
     # Compute results
