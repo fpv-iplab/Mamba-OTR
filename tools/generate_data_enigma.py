@@ -16,7 +16,11 @@ def generate_targets(ann_data, out_path):
         frame_num = int(frame.split("_")[1]) - 1 # -1 because frame starts from 1
         for interaction in ann_data["frame_annotations"][frame]["interactions"]:
             action = interaction["interaction_category"]
-            data[video_id][frame_num, action + 1] = 1   # + 1 because 0 is reserved for background
+            try:
+                data[video_id][frame_num, action + 1] = 1   # + 1 because 0 is reserved for background
+            except IndexError:
+                print("Annotation error in video: ", video_id, " frame: ", frame_num)
+                continue
     for video in data:
         indexis = np.where(~data[video].any(axis=1))[0]
         data[video][indexis, 0] = 1
@@ -77,7 +81,7 @@ def main(args):
 
     if not os.path.exists(target_path):
         os.makedirs(target_path)
-    if len(os.listdir(target_path)) != ENIGMA_VIDEO_COUNT:
+    if len(os.listdir(target_path)) != 1:
         generate_targets(ann_data, target_path)
 
 
