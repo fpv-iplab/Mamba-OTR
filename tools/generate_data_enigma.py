@@ -41,6 +41,7 @@ def generate_features(ann_data, env, out_path):
                 else:
                     ann_data['videos'][video]["frame_count"] = n - 1
                     ann_data["videos"][video]["duration_seconds"] = (n - 1) / ann_data["videos"][video]["fps"]
+                    break
             data = np.array(data)
             np.save(os.path.join(out_path, f"{video}.npy"), data)
             print(f"Video {video} done")
