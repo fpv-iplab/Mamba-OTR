@@ -13,7 +13,7 @@ def generate_targets(ann_data, out_path):
         data[video] = np.zeros((frame_count, len(list(ann_data["interaction_types"].keys())) + 1))
     for frame in ann_data["frame_annotations"]:
         video_id = frame.split("_")[0]
-        frame_num = int(frame.split("_")[1])
+        frame_num = int(frame.split("_")[1]) - 1 # -1 because frame starts from 1
         for interaction in ann_data["frame_annotations"][frame]["interactions"]:
             action = interaction["interaction_category"]
             data[video_id][frame_num, action + 1] = 1   # + 1 because 0 is reserved for background
