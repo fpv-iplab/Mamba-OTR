@@ -91,6 +91,12 @@ class LSTRDataLayer(data.Dataset):
                         segments_before_current,
                     ])
         else:
+            if self.data_name == 'ENIGMA':
+                for video_id in ["126", "107", "49", "66", "69", "104", "111", "145", "156"]:
+                    try:
+                        self.sessions.remove(video_id)
+                    except:
+                        pass
             for session in self.sessions:
                 target = np.load(osp.join(self.data_root, self.target_perframe, session + '.npy'))
                 if self.cfg.MODEL.LSTR.V_N_CLASSIFIER:
@@ -274,6 +280,7 @@ class LSTRDataLayer(data.Dataset):
         return len(self.inputs)
 
 
+@registry.register('LSTRBatchInferenceENIGMA')
 @registry.register('LSTRBatchInferenceTHUMOS')
 @registry.register('LSTRBatchInferenceTVSeries')
 @registry.register('LSTRBatchInferenceEK55')
@@ -298,6 +305,8 @@ class LSTRBatchInferenceDataLayer(data.Dataset):
         assert phase == 'test', 'phase must be `test` for batch inference, got {}'
 
         self.inputs = []
+        if "107" in self.sessions:
+            self.sessions.remove("107")
         for session in self.sessions:
             target = np.load(osp.join(self.data_root, self.target_perframe, session + '.npy'))
             if self.cfg.MODEL.LSTR.V_N_CLASSIFIER:
