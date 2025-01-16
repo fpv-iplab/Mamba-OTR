@@ -6,6 +6,22 @@ import numpy as np
 
 
 
+def generate_targets(ann_data, out_path):
+    data = dict.fromkeys(ann_data["videos"].keys())
+    for video in ann_data["videos"]:
+        frame_count = ann_data["videos"][video]["frame_count"]
+        data[video] = np.zeros((frame_count, len(list(ann_data["interaction_types"].keys())) + 1))
+    for frame in ann_data["frame_annotations"]:
+        video_id = frame.split("_")[0]
+        frame_num = int(frame.split("_")[1])
+        for interaction in ann_data["frame_annotations"][frame]["interactions"]:
+            action = interaction["interaction_category"]
+            data[video_id][frame_num, action + 1] = 1   # + 1 because 0 is reserved for background
+    for video in data:
+        indexis = np.where(~data[video].any(axis=1))[0]
+        data[video][indexis, 0] = 1
+    for video in data:
+        np.save(os.path.join(out_path, video + ".npy"), data[video])
 
 
 
@@ -34,11 +50,12 @@ def generate_features(ann_data, env, out_path):
 
 
 def main(args):
-    ENIGMA_VIDEO_COUNT = 51
+    ENIGMA_VIDEO_COUNT = 51 - 2 # 2 videos are missing
     data_path = args.data_path
     if not os.path.exists(data_path):
         raise FileNotFoundError("Data path does not exist")
 
+    target_path = os.path.join(data_path, "target_end_perframe")
     ann_file_path = os.path.join(data_path, "ENIGMA-51_annotations.json")
     if not os.path.exists(ann_file_path):
         raise FileNotFoundError("Annotations file does not exist")
@@ -56,6 +73,11 @@ def main(args):
         os.makedirs(feature_out_path)
     if len(os.listdir(feature_out_path)) != ENIGMA_VIDEO_COUNT:
         generate_features(ann_data, env, feature_out_path)
+
+    if not os.path.exists(target_path):
+        os.makedirs(target_path)
+    if len(os.listdir(target_path)) != ENIGMA_VIDEO_COUNT:
+        generate_targets(ann_data, target_path)
 
 
 
