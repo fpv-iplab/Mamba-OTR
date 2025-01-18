@@ -10,12 +10,13 @@ def generate_targets(ann_data, out_path):
     data = dict.fromkeys(ann_data["videos"].keys())
     for video in ann_data["videos"]:
         frame_count = ann_data["videos"][video]["frame_count"]
-        data[video] = np.zeros((frame_count, len(list(ann_data["interaction_types"].keys())) + 1))
+        data[video] = np.zeros((frame_count, len(list(ann_data["interaction_types"].keys()))))
     for frame in ann_data["frame_annotations"]:
         video_id = frame.split("_")[0]
         frame_num = int(frame.split("_")[1]) - 1 # -1 because frame starts from 1
         for interaction in ann_data["frame_annotations"][frame]["interactions"]:
             action = interaction["interaction_category"]
+            action = 4 if action == 2 else action # Remove "first-contact" action and change it with "contact"
             try:
                 data[video_id][frame_num, action + 1] = 1   # + 1 because 0 is reserved for background
             except IndexError:
@@ -81,7 +82,7 @@ def main(args):
 
     if not os.path.exists(target_path):
         os.makedirs(target_path)
-    if len(os.listdir(target_path)) != 1:
+    if len(os.listdir(target_path)) != ENIGMA_VIDEO_COUNT:
         generate_targets(ann_data, target_path)
 
 
