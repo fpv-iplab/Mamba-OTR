@@ -5839,7 +5839,7 @@
             "decontact",
             "contact"
         ],
-        "num_classes": 6,
+        "num_classes": 5,
         "ignore_index": 0,
         "fps": 30,
         "train_session_set": [
