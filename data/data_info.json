@@ -5834,12 +5834,10 @@
         "data_root": "data/ENIGMA",
         "class_names": [
             "Background",
-            "take",
-            "release",
-            "decontact",
-            "contact"
+            "contact",
+            "decontact"
         ],
-        "num_classes": 5,
+        "num_classes": 3,
         "ignore_index": 0,
         "fps": 30,
         "train_session_set": [

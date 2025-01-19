@@ -7,16 +7,24 @@ import numpy as np
 
 
 def generate_targets(ann_data, out_path):
+    contact_decontact_mapping = {
+        0 : 0,
+        1 : 1,
+        2 : 0,
+        3 : 1,
+        4 : 0,
+    }
+
     data = dict.fromkeys(ann_data["videos"].keys())
     for video in ann_data["videos"]:
         frame_count = ann_data["videos"][video]["frame_count"]
-        data[video] = np.zeros((frame_count, len(list(ann_data["interaction_types"].keys()))))
+        data[video] = np.zeros((frame_count, 3)) # 0: background, 1: contact, 2: decontact
     for frame in ann_data["frame_annotations"]:
         video_id = frame.split("_")[0]
         frame_num = int(frame.split("_")[1]) - 1 # -1 because frame starts from 1
         for interaction in ann_data["frame_annotations"][frame]["interactions"]:
             action = interaction["interaction_category"]
-            action = 4 if action == 2 else action # Remove "first-contact" action and change it with "contact"
+            action = contact_decontact_mapping[action]
             try:
                 data[video_id][frame_num, action + 1] = 1   # + 1 because 0 is reserved for background
             except IndexError:
