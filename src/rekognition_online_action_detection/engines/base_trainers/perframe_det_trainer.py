@@ -102,10 +102,10 @@ def do_perframe_det_train(cfg,
                         det_score = det_score.reshape(-1, reshape_size)
                         det_target = det_target.reshape(-1, reshape_size)
 
-                        if cfg.OUTPUT.MODALITY == "action":
-                            det_loss = criterion[loss_names[0]](det_score, det_target)
+                        if cfg.DATA.DATA_NAME == "EK100" and cfg.OUTPUT.MODALITY == "action":
+                            det_loss = criterion["MCE_EQL"](det_score, det_target)
                         else:
-                            det_loss = criterion["MCE"](det_score, det_target)
+                            det_loss = criterion[loss_names[0]](det_score, det_target)
                         det_losses[phase] += det_loss.item() * batch_size
 
                         if cfg.MODEL.LSTR.V_N_CLASSIFIER:
