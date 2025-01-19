@@ -329,18 +329,6 @@ class MultipCrossEntropySeesawLoss(nn.Module):
             return output[bg_target != 1]
 
 
-@CRITERIONS.register('PRED_FUTURE')
-class PredictFutureLoss(nn.Module):
-
-    def __init__(self, reduction='mean', ignore_index=-100):
-        super(PredictFutureLoss, self).__init__()
-
-        self.reduction = reduction
-        self.criterion = nn.MSELoss(reduction=reduction)
-
-    def forward(self, pred, true):
-        return self.criterion(pred, true)
-
 
 def build_criterion(cfg, device=None):
     criterion = {}
