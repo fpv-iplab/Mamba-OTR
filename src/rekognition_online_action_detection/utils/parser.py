@@ -112,8 +112,9 @@ def assert_and_infer_cfg(cfg, args):
         cfg.OUTPUT_DIR = osp.join(cfg.OUTPUT_DIR, cfg.SESSION)
 
 
-def load_cfg():
-    args = parse_args()
+def load_cfg(args = None):
+    if args is None:
+        args = parse_args()
     cfg = get_cfg()
     if args.config_file is not None:
         cfg.merge_from_file(args.config_file)
