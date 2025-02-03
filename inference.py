@@ -1,5 +1,5 @@
 import os
-import time
+import math
 import torch
 import argparse
 import numpy as np
@@ -105,6 +105,7 @@ def main(cfg, args):
     all_frames = sorted(os.listdir(video_path))
 
     FRAMERATE = 30
+    print(f"Total Frames: {len(all_frames)}")
     print(f"Video Length: {len(all_frames) / FRAMERATE} seconds")
 
 
@@ -115,7 +116,7 @@ def main(cfg, args):
                         range(cfg.MODEL.LSTR.WORK_MEMORY_LENGTH,
                             len(all_frames),
                             cfg.MODEL.LSTR.WORK_MEMORY_LENGTH)), 
-                           total=len(all_frames) // cfg.MODEL.LSTR.WORK_MEMORY_LENGTH):
+                           total=math.ceil(len(all_frames) / cfg.MODEL.LSTR.WORK_MEMORY_LENGTH)):
         frames_paths = all_frames[start:end]
 
         frames = []
