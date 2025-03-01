@@ -447,7 +447,7 @@
         ]
     },
     "EK100": {
-        "data_root": "data/EK100",
+        "data_root": "data/EK100/30fps",
         "class_names": [
             "Background",
             "take tap",
@@ -4664,7 +4664,7 @@
         "num_verbs": 98,
         "num_nouns": 301,
         "ignore_index": 0,
-        "fps": 4,
+        "fps": 30,
         "train_session_set": [
             "P04_117",
             "P02_07",
