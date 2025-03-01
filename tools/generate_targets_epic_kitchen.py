@@ -1,3 +1,4 @@
+import os
 import argparse
 import numpy as np
 import pandas as pd
@@ -12,16 +13,13 @@ def str2sec(string):
 def main():
     parser = argparse.ArgumentParser(description='Generate targets')
     parser.add_argument('--dataset', type=str,
-                        choices=['EK55', 'EK100'], default='EK55')
-    parser.add_argument('--data-path', type=str,
-                        default='/scratch/cluster/yzhao/Datasets/EPIC-KITCHENS/')
+                        choices=['EK55', 'EK100'], default='EK100')
+    parser.add_argument('--feat-path', type=str)
     parser.add_argument('--targets-path', type=str,
-                        default='/scratch/cluster/yzhao/Datasets/'
-                                'EPIC-KITCHENS/features/target_perframe/')
+                        default=os.path.join(os.path.dirname(__file__), "data", "target_perframe"))
     parser.add_argument('--fps', type=int, default=30)
-    parser.add_argument('--tick', type=float, default=7.5)
-    parser.add_argument('--anno-path', type=str,
-                        default='external/rulstm/RULSTM/data/ek55/')
+    parser.add_argument('--anno-path', type=str, 
+                        default=os.path.join(os.path.dirname(__file__), "external", "rulstm", "RULSTM", "data", "ek100"))
     parser.add_argument('--class-type', type=str, default='action',
                         choices=['verb', 'noun', 'action'])
     args = parser.parse_args()
@@ -29,7 +27,7 @@ def main():
     # initialize the targets
     targets = {}
     if args.class_type == 'action':
-        num_classes = 2513 + 1
+        num_classes = 3808 + 1
     elif args.class_type == 'verb':
         actions = pd.read_csv(osp.join(args.anno_path, 'actions.csv'))
         a_to_v = {a[1]['id'] + 1: a[1]['verb'] + 1
@@ -40,6 +38,8 @@ def main():
         a_to_n = {a[1]['id'] + 1: a[1]['noun'] + 1
                   for a in actions.iterrows()}
         num_classes = max(a_to_n.values()) + 1
+
+    print("Number of classes: ", num_classes)
 
     for subset in ['training', 'validation']:
         vids = [line.strip() for line in open('{}/{}_videos.csv'.format(args.anno_path, subset))]
@@ -52,15 +52,16 @@ def main():
             else:
                 anno_per_video[vid].append((int(f_start), int(f_end), int(c_verb), int(c_noun), int(c_verbnoun)))
         for vid in vids:
-            feature = np.load('{}/features/rgb_kinetics_resnet50/{}.npy'.format(args.data_path, vid))
+            feature = np.load(os.path.join(args.feat_path, f"{vid}.npy"))
             feature_len = feature.shape[0]
+            print(vid, feature_len)
             targets[vid] = np.zeros((feature_len,
                                      num_classes))
             targets[vid][:, 0] = 1
             for anno in anno_per_video[vid]:
                 print(vid, anno)
-                ss = int(np.floor(anno[0] / args.tick))
-                ee = min(int(np.ceil(anno[1] / args.tick)), feature_len)
+                ss = int(np.floor(anno[0]))
+                ee = min(int(np.ceil(anno[1])), feature_len)
                 if args.class_type == 'action':
                     ci = anno[4]
                 elif args.class_type == 'verb':
@@ -73,7 +74,10 @@ def main():
 
     print('Dumping npy files..')
     for vid in targets:
-        np.save(args.targets_path + '{}.npy'.format(vid), targets[vid])
+        folder_name = "target_perframe" if args.class_type == 'action' else f"{args.class_type}_perframe"
+        if not os.path.exists(osp.join(args.targets_path, folder_name)):
+            os.makedirs(osp.join(args.targets_path, folder_name))
+        np.save(osp.join(args.targets_path, folder_name, f'{vid}.npy'), targets[vid])
 
 
 if __name__ == '__main__':
