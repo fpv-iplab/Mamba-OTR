@@ -66,10 +66,10 @@ class LSTRDataLayer(data.Dataset):
                 self.segment_by_cls = {cls: segment_list[segment_list['action'] == cls]
                                    for cls in range(0, self.cfg.DATA.NUM_CLASSES - 1)}
             for session in self.sessions:
-                target = np.load(osp.join(self.data_root, self.target_perframe, session + '.npy'))
+                target = np.load(osp.join(self.data_root, "TARGET", self.target_perframe, session + '.npy'))
                 if self.cfg.MODEL.LSTR.V_N_CLASSIFIER:
-                    verb_target = np.load(osp.join(self.data_root, self.target_perframe.replace('target', 'verb'), session + '.npy'))
-                    noun_target = np.load(osp.join(self.data_root, self.target_perframe.replace('target', 'noun'), session + '.npy'))
+                    verb_target = np.load(osp.join(self.data_root, "TARGET", self.target_perframe.replace('target', 'verb'), session + '.npy'))
+                    noun_target = np.load(osp.join(self.data_root, "TARGET", self.target_perframe.replace('target', 'noun'), session + '.npy'))
                 else:
                     verb_target = target
                     noun_target = target
@@ -312,10 +312,10 @@ class LSTRBatchInferenceDataLayer(data.Dataset):
                 except:
                     pass
         for session in self.sessions:
-            target = np.load(osp.join(self.data_root, self.target_perframe, session + '.npy'))
+            target = np.load(osp.join(self.data_root, "TARGET", self.target_perframe, session + '.npy'))
             if self.cfg.MODEL.LSTR.V_N_CLASSIFIER:
-                verb_target = np.load(osp.join(self.data_root, self.target_perframe.replace('target', 'verb'), session + '.npy'))
-                noun_target = np.load(osp.join(self.data_root, self.target_perframe.replace('target', 'noun'), session + '.npy'))
+                verb_target = np.load(osp.join(self.data_root, "TARGET", self.target_perframe.replace('target', 'verb'), session + '.npy'))
+                noun_target = np.load(osp.join(self.data_root, "TARGET", self.target_perframe.replace('target', 'noun'), session + '.npy'))
             else:
                 verb_target = target
                 noun_target = target

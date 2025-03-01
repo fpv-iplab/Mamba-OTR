@@ -10,14 +10,8 @@ from rekognition_online_action_detection.utils.registry import Registry
 
 FEATURE_HEADS = Registry()
 FEATURE_SIZES = {
-    'rgb_anet_resnet50': 2048,
-    'flow_anet_resnet50': 2048,
-    'rgb_kinetics_bninception': 1024,
-    'flow_kinetics_bninception': 1024,
-    'flow_nv_kinetics_bninception': 1024,
-    'rgb_kinetics_resnet50': 2048,
-    'flow_kinetics_resnet50': 2048,
-    'obj_ek55_fasterrcnn': 352,
+    "RGB": 1024,
+    "FLOW": 1024,
     'DINOv2': 1024
 }
 
