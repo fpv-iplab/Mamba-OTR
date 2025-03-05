@@ -197,13 +197,40 @@ class EQLv2Loss(nn.Module):
 
 @CRITERIONS.register('FOCAL')
 class FocalLoss(nn.Module):
-    def __init__(self, alpha: float = 0.25, gamma: float = 2.0, reduction='mean', ignore_index=-100):
+    def __init__(self, 
+                 alpha: float = 0.25,
+                 gamma: float = 2.0,
+                 reg_lambda: float = 0.25,
+                 regularization='entropy', 
+                 window_size=5,
+                 reduction='mean',
+                 ignore_index=-100):
         super(FocalLoss, self).__init__()
         self.alpha = alpha
         self.gamma = gamma
         self.reduction = reduction
-
+        self.reg_lambda = reg_lambda
+        self.window_size = window_size
         self.ignore_index = ignore_index
+        self.regularization = regularization
+
+
+    def __entropy(self, p: torch.Tensor) -> torch.Tensor:
+        # h = -torch.sum(p * torch.log(p + 1e-6), dim=1)
+        h = -torch.sum(p * torch.log(p + 1e-6) + (1 - p) * torch.log(1 - p + 1e-6), dim=1)
+        return h.mean()
+
+
+    def __sliding_window(self, p: torch.Tensor) -> torch.Tensor:
+        _, seq_len = p.shape
+        penalty = torch.zeros_like(p)
+        
+        for t in range(seq_len):
+            start = max(0, t - self.window_size // 2)
+            end = min(seq_len, t + self.window_size // 2 + 1)
+            penalty[:, t] = torch.sum(p[:, start:end], dim=1) - p[:, t]
+        
+        return penalty.mean()
 
 
     def forward(self, 
@@ -243,6 +270,16 @@ class FocalLoss(nn.Module):
         p = torch.sigmoid(inputs)
         ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
         p_t = p * targets + (1 - p) * (1 - targets)
+
+        h = 0
+        loss = None
+        if self.regularization == 'entropy':
+            h = self.__entropy(p)
+        elif self.regularization == 'sliding_window':
+            h = self.__sliding_window(p)
+        else:
+            raise ValueError(f"Regularization method {self.regularization} not supported")
+
         loss = ce_loss * ((1 - p_t) ** self.gamma)
 
         if self.alpha >= 0:
@@ -253,7 +290,7 @@ class FocalLoss(nn.Module):
             loss = loss.mean()
         elif self.reduction == "sum":
             loss = loss.sum()
-        return loss
+        return loss + self.reg_lambda * h
 
 
 @CRITERIONS.register('MCE_SEESAW')
