@@ -6,7 +6,7 @@ from src.rekognition_online_action_detection.utils.actionstartend_utils import t
 
 def generate_target(cfg):
     isEK = "ek" in cfg.DATA.DATA_NAME.lower()
-    targetPath = os.path.join(cfg.DATA.DATA_ROOT, cfg.INPUT.TARGET_PERFRAME)
+    targetPath = os.path.join(cfg.DATA.DATA_ROOT, "TARGET", cfg.INPUT.TARGET_PERFRAME)
     task = "start" in targetPath
     inputPath = targetPath.replace("start_" if task else "end_", "")
 
@@ -17,7 +17,7 @@ def generate_target(cfg):
 
             if not os.path.exists(targetPath.replace("target", "target_tk")):
                 print("Reducing EK target perframe to action start/end")
-                # reduce(cfg, targetPath, type="action")
+                reduce(cfg, targetPath, type="action")
                 reduce(cfg, targetPath.replace("_tk", "").replace('target', 'verb'), type="verb")
                 reduce(cfg, targetPath.replace("_tk", "").replace('target', 'noun'), type="noun")
 
