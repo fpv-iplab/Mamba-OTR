@@ -12,7 +12,7 @@ beautifulsoup4==4.12.3
 bleach==6.2.0
 Brotli @ file:///croot/brotli-split_1714483155106/work
 -e git+https://github.com/OpenGVLab/video-mamba-suite.git@ec9108b72d5db59f6d634c94cd0e008228a7b918#egg=causal_conv1d&subdirectory=../../../external/video_mamba_suite/causal-conv1d
-certifi @ file:///croot/certifi_1725551672989/work/certifi
+certifi @ file:///croot/certifi_1738623731865/work/certifi
 cffi==1.17.1
 charset-normalizer @ file:///croot/charset-normalizer_1721748349566/work
 comm==0.2.2
@@ -57,6 +57,7 @@ jupyter_server_terminals==0.5.3
 jupyterlab==4.2.5
 jupyterlab_pygments==0.3.0
 jupyterlab_server==2.27.3
+lmdb==1.6.2
 -e git+https://github.com/OpenGVLab/video-mamba-suite.git@ec9108b72d5db59f6d634c94cd0e008228a7b918#egg=mamba_ssm&subdirectory=../../../external/video_mamba_suite/mamba
 MarkupSafe @ file:///croot/markupsafe_1704205993651/work
 matplotlib-inline==0.1.7
