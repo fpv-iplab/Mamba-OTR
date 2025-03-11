@@ -220,19 +220,19 @@ class FocalLoss(nn.Module):
         return h.mean()
 
 
-    # def __sliding_window(self, p: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-    #     _, seq_len = p.shape
-    #     penalty = torch.zeros_like(p)
-
-    #     for t in range(seq_len):
-    #         start = max(0, t - self.window_size // 2)
-    #         end = min(seq_len, t + self.window_size // 2 + 1)
-    #         penalty[:, t] = torch.sum(p[:, start:end], dim=1) - p[:, t]
-
-    #     return penalty.mean()
-
-
     def __sliding_window(self, p: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        _, seq_len = p.shape
+        penalty = torch.zeros_like(p)
+
+        for t in range(seq_len):
+            start = max(0, t - self.window_size // 2)
+            end = min(seq_len, t + self.window_size // 2 + 1)
+            penalty[:, t] = torch.sum(p[:, start:end], dim=1) - p[:, t]
+
+        return penalty.mean()
+
+
+    def __fixed_window(self, p: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         _, seq_len = p.shape
         penalty = torch.zeros_like(p)
 
@@ -289,6 +289,8 @@ class FocalLoss(nn.Module):
             h = self.__entropy(p)
         elif self.regularization == 'sliding_window':
             h = self.__sliding_window(p, targets)
+        elif self.regularization == 'fixed_window':
+            h = self.__fixed_window(p, targets)
         else:
             raise ValueError(f"Regularization method {self.regularization} not supported")
 
