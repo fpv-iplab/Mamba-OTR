@@ -220,7 +220,7 @@ class FocalLoss(nn.Module):
         return h.mean()
 
 
-    def __sliding_window(self, p: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    def __sliding_window(self, p: torch.Tensor) -> torch.Tensor:
         _, seq_len = p.shape
         penalty = torch.zeros_like(p)
 
