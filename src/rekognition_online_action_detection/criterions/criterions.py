@@ -288,7 +288,7 @@ class FocalLoss(nn.Module):
         if self.regularization == 'entropy':
             h = self.__entropy(p)
         elif self.regularization == 'sliding_window':
-            h = self.__sliding_window(p, targets)
+            h = self.__sliding_window(p)
         elif self.regularization == 'fixed_window':
             h = self.__fixed_window(p, targets)
         else:
