@@ -35,20 +35,20 @@ class BaseFeatureHead(nn.Module):
             raise RuntimeError('Unknown modality of {}'.format(cfg.INPUT.MODALITY))
 
         if self.with_visual and self.with_motion and self.with_object:
-            visual_size = FEATURE_SIZES[cfg.INPUT.VISUAL_FEATURE]
-            motion_size = FEATURE_SIZES[cfg.INPUT.MOTION_FEATURE]
-            object_size = FEATURE_SIZES[cfg.INPUT.OBJECT_FEATURE]
+            visual_size = FEATURE_SIZES.get(cfg.INPUT.VISUAL_FEATURE, 1024)
+            motion_size = FEATURE_SIZES.get(cfg.INPUT.MOTION_FEATURE, 1024)
+            object_size = FEATURE_SIZES.get(cfg.INPUT.OBJECT_FEATURE, 1024)
             fusion_size = visual_size + motion_size + object_size
         elif self.with_visual and self.with_motion:
-            visual_size = FEATURE_SIZES[cfg.INPUT.VISUAL_FEATURE]
-            motion_size = FEATURE_SIZES[cfg.INPUT.MOTION_FEATURE]
+            visual_size = FEATURE_SIZES.get(cfg.INPUT.VISUAL_FEATURE, 1024)
+            motion_size = FEATURE_SIZES.get(cfg.INPUT.MOTION_FEATURE, 1024)
             fusion_size = visual_size + motion_size
         elif self.with_visual:
-            fusion_size = FEATURE_SIZES[cfg.INPUT.VISUAL_FEATURE]
+            fusion_size = FEATURE_SIZES.get(cfg.INPUT.VISUAL_FEATURE, 1024)
         elif self.with_motion:
-            fusion_size = FEATURE_SIZES[cfg.INPUT.MOTION_FEATURE]
+            fusion_size = FEATURE_SIZES.get(cfg.INPUT.MOTION_FEATURE, 1024)
         elif self.with_object:
-            fusion_size = FEATURE_SIZES[cfg.INPUT.OBJECT_FEATURE]
+            fusion_size = FEATURE_SIZES.get(cfg.INPUT.OBJECT_FEATURE, 1024)
 
         self.d_model = fusion_size
 
