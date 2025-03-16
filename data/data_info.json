@@ -4664,7 +4664,7 @@
         "num_verbs": 98,
         "num_nouns": 301,
         "ignore_index": 0,
-        "fps": 30,
+        "fps": 4,
         "train_session_set": [
             "P04_117",
             "P02_07",
@@ -6330,7 +6330,7 @@
         ]
     },
     "ENIGMA": {
-        "data_root": "data/ENIGMA",
+        "data_root": "data/ENIGMA/30fps",
         "class_names": [
             "Background",
             "contact",
