@@ -241,10 +241,9 @@ class FocalLoss(nn.Module):
             return penalty.mean()
 
         for t in idx:
-            if targets[:, t].sum() > 0:
-                start = max(0, t - self.window_size // 2)
-                end = min(seq_len, t + self.window_size // 2 + 1)
-                penalty[:, t] = torch.sum(p[:, start:end], dim=1) - p[:, t]
+            start = max(0, t - self.window_size // 2)
+            end = min(seq_len, t + self.window_size // 2 + 1)
+            penalty[:, t] = torch.sum(p[:, start:end], dim=1) - p[:, t]
 
         return penalty.mean()
 
