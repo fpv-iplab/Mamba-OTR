@@ -12,7 +12,8 @@ FEATURE_HEADS = Registry()
 FEATURE_SIZES = {
     "RGB": 1024,
     "FLOW": 1024,
-    'DINOv2': 1024
+    'DINOv2': 1024,
+    "EfficientNetV2": 1280,
 }
 
 
