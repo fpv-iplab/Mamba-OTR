@@ -235,8 +235,12 @@ class FocalLoss(nn.Module):
     def __fixed_window(self, p: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         _, seq_len = p.shape
         penalty = torch.zeros_like(p)
+        idx = torch.nonzero(targets.sum(dim=0) > 0).squeeze()
 
-        for t in range(seq_len):
+        if idx.shape == torch.Size([]):
+            return penalty.mean()
+
+        for t in idx:
             if targets[:, t].sum() > 0:
                 start = max(0, t - self.window_size // 2)
                 end = min(seq_len, t + self.window_size // 2 + 1)
