@@ -200,7 +200,7 @@ class FocalLoss(nn.Module):
     def __init__(self, 
                  alpha: float = 0.25,
                  gamma: float = 2.0,
-                 reg_lambda: float = 0.25,
+                 reg_lambda: float = 0.01,
                  regularization='entropy', 
                  window_size=5,
                  reduction='mean',
