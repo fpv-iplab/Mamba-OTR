@@ -41,6 +41,7 @@ def assert_and_infer_cfg(cfg, args):
     # Setup the visible devices
     cfg.GPU = args.gpu
     cfg.SAVE = args.save
+    cfg.CONFIG_FILE = args.config_file
 
     # Infer data info
     with open(cfg.DATA.DATA_INFO, 'r') as f:

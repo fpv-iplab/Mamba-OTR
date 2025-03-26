@@ -5,8 +5,8 @@ __all__ = ['setup_logger']
 
 import os
 import sys
+import shutil
 import logging
-import pprint
 
 
 def setup_logger(cfg, phase, quiet=False):
@@ -20,6 +20,7 @@ def setup_logger(cfg, phase, quiet=False):
     if phase == 'train':
         log_file = os.path.join(cfg.OUTPUT_DIR, 'log.txt')
         os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+        shutil.copyfile(cfg.CONFIG_FILE, os.path.join(cfg.OUTPUT_DIR, 'config.yaml'))
     else:
         log_file = os.path.splitext(cfg.MODEL.CHECKPOINT)[0] + '.txt'
     fh = logging.FileHandler(log_file)
