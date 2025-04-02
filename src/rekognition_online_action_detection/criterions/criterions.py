@@ -204,10 +204,12 @@ class FocalLoss(nn.Module):
                  regularization='entropy', 
                  window_size=5,
                  reduction='mean',
+                 last_only=False,
                  ignore_index=-100):
         super(FocalLoss, self).__init__()
         self.alpha = alpha
         self.gamma = gamma
+        self.last_only = last_only
         self.reduction = reduction
         self.reg_lambda = reg_lambda
         self.window_size = window_size
@@ -233,17 +235,22 @@ class FocalLoss(nn.Module):
 
 
     def __fixed_window(self, p: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        _, seq_len = p.shape
+        _, seq_len, num_classes = p.shape
         penalty = torch.zeros_like(p)
-        idx = torch.nonzero(targets.sum(dim=0) > 0).squeeze()
 
-        if idx.shape == torch.Size([]):
-            return penalty.mean()
+        for c in range(num_classes):
+            idx = torch.nonzero(targets[:, :, c].sum(dim=0) > 0).squeeze()
 
-        for t in idx:
-            start = max(0, t - self.window_size // 2)
-            end = min(seq_len, t + self.window_size // 2 + 1)
-            penalty[:, t] = torch.sum(p[:, start:end], dim=1) - p[:, t]
+            if idx.numel() == 0:
+                continue
+
+            if idx.dim() == 0:
+                idx = idx.unsqueeze(0)
+
+            for t in idx:
+                start = max(0, t - self.window_size // 2)
+                end = min(seq_len, t + self.window_size // 2 + 1)
+                penalty[:, t, c] = torch.sum(p[:, start:end, c], dim=1) - p[:, t, c]
 
         return penalty.mean()
 
@@ -279,8 +286,12 @@ class FocalLoss(nn.Module):
         targets = targets.float()
 
         notice_index = [i for i in range(targets.shape[-1]) if i != self.ignore_index]
-        inputs = inputs[:, notice_index]
-        targets = targets[:, notice_index]
+        origin_inputs = inputs[:, :, notice_index]
+        origin_targets = targets[:, :, notice_index]
+
+        if self.last_only:
+            inputs = origin_inputs[:, -1, :].contiguous()
+            targets = origin_targets[:, -1, :].contiguous()
 
         p = torch.sigmoid(inputs)
         ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
@@ -289,11 +300,11 @@ class FocalLoss(nn.Module):
         h = 0
         loss = None
         if self.regularization == 'entropy':
-            h = self.__entropy(p)
+            h = self.__entropy(torch.sigmoid(origin_inputs))
         elif self.regularization == 'sliding_window':
-            h = self.__sliding_window(p)
+            h = self.__sliding_window(torch.sigmoid(origin_inputs))
         elif self.regularization == 'fixed_window':
-            h = self.__fixed_window(p, targets)
+            h = self.__fixed_window(torch.sigmoid(origin_inputs), origin_targets)
         else:
             raise ValueError(f"Regularization method {self.regularization} not supported")
 

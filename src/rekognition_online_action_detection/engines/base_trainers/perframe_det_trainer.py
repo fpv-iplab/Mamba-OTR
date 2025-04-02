@@ -92,16 +92,6 @@ def do_perframe_det_train(cfg,
                         else:
                             verb_score, noun_score = None, None
 
-                        if cfg.OUTPUT.MODALITY == "action":
-                            reshape_size = cfg.DATA.NUM_CLASSES
-                        elif cfg.OUTPUT.MODALITY == "verb":
-                            reshape_size = cfg.DATA.NUM_VERBS
-                        elif cfg.OUTPUT.MODALITY == "noun":
-                            reshape_size = cfg.DATA.NUM_NOUNS
-
-                        det_score = det_score.reshape(-1, reshape_size)
-                        det_target = det_target.reshape(-1, reshape_size)
-
                         if cfg.DATA.DATA_NAME == "EK100" and cfg.OUTPUT.MODALITY == "action":
                             det_loss = criterion["MCE_EQL"](det_score, det_target)
                         else:
