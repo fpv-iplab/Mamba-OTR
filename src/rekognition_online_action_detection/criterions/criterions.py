@@ -392,6 +392,9 @@ def build_criterion(cfg, device=None):
                 params['ignore_index'] = cfg.DATA.IGNORE_INDEX
             if name == "MCE_EQL":
                 params["tk_only"] = cfg.DATA.TK_IDXS if cfg.DATA.TK_ONLY else []
+            if params.get('window_size', None) is not None:
+                if params['window_size'] > cfg.MODEL.LSTR.WORK_MEMORY_SECONDS * cfg.DATA.FPS:
+                    params['window_size'] = cfg.MODEL.LSTR.WORK_MEMORY_SECONDS * cfg.DATA.FPS
             criterion[name] = CRITERIONS[name](**params).to(device)
         else:
             raise RuntimeError('Unknown criterion: {}'.format(name))
