@@ -154,6 +154,9 @@ def perframe_perpoint_average_precision(ground_truth,
                     pred = preprocess_pred(prediction[:, idx], threshold=0.005, fps=fps)
                     result['per_class_AP'][class_name] = point_average_precision(gt, pred)
 
-    result["p_mAP"] = np.mean(list(result['per_class_AP'].values()), axis=1)
+    if len(result['per_class_AP']) != 0:
+        result["p_mAP"] = np.mean(list(result['per_class_AP'].values()), axis=1)
+    else:
+        result["p_mAP"] = np.full((2,), -1.0)
     result["mp_mAP"] = np.mean(result["p_mAP"])
     return result
