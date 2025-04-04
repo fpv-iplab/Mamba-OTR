@@ -58,6 +58,11 @@ class WholeVideoDataset(torch.utils.data.Dataset):
 
 
 def test(cfg):
+    times = []
+    results = []
+    video_length = []
+    sessions = getattr(cfg.DATA, 'TEST_SESSION_SET')
+
     # Setup configurations
     generate_target(cfg)
     device = setup_environment(cfg)
@@ -71,20 +76,23 @@ def test(cfg):
     logger.info(model)
     logger.info("")
 
+    max_len = 0
+    for video_id in sessions:
+        video_len = np.load(osp.join(cfg.DATA.DATA_ROOT, cfg.INPUT.VISUAL_FEATURE, video_id + '.npy'), mmap_mode='r').shape[0]
+        if video_len > max_len:
+            max_len = video_len
+    max_len_rounded = int(np.ceil(max_len / 1000.0)) * 1000
+    logger.info(f"Max video length: {max_len} (rounded up: {max_len_rounded})")
+
     checkpointer.load(model)
-    pos_encoding = PositionalEncoding(model.d_model, model.dropout, 10000)
+    pos_encoding = PositionalEncoding(model.d_model, model.dropout, max_len_rounded)
     model.pos_encoding = pos_encoding
     model.pos_encoding = model.pos_encoding.to(device)
     model.eval()
 
 
-    times = []
-    results = []
-    video_length = []
-    sessions = getattr(cfg.DATA, 'TEST_SESSION_SET')
-
+    video_preds = []
     for video in tqdm(sessions):
-        start = time.time()
         dataset = WholeVideoDataset(cfg, video)
         data_loader = torch.utils.data.DataLoader(
             dataset=dataset,
@@ -102,27 +110,34 @@ def test(cfg):
 
             video_length.append(visual.shape[1])
 
+            torch.cuda.synchronize()
+            start = time.time()
+
             with torch.no_grad():
                 score = model(visual, optical, objects)
-                score, _, _ = score
-                score = score.softmax(dim=-1).cpu().numpy()
 
-                end = time.time()
-                times.append(end - start)
+            torch.cuda.synchronize()
+            end = time.time()
+            times.append(end - start)
 
-                # Not in time benchmark because it's just evaluation
-                score = score.squeeze(0)
-                target = target.squeeze(0)
+            score, _, _ = score
+            score = score.softmax(dim=-1).cpu().numpy()
 
-                result_det = compute_result["perpoint"](
-                    cfg,
-                    target,
-                    score,
-                    class_names = cfg.DATA.VERB_NAMES
-                )
-                if result_det["mp_mAP"] == -1.0:
-                    continue
-                results.append(result_det["mp_mAP"])
+            score = score.squeeze(0)
+            target = target.squeeze(0)
+            video_preds.append((score, target))
+
+
+    for score, target in video_preds:
+        result_det = compute_result["perpoint"](
+            cfg,
+            target,
+            score,
+            class_names = cfg.DATA.VERB_NAMES
+        )
+        if result_det["mp_mAP"] == -1.0:
+            continue
+        results.append(result_det["mp_mAP"])
 
     results = np.mean(np.array(results))
     print(f"Mean Average Precision: {results:.5f}")
