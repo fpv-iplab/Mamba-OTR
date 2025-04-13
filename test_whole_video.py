@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import torch
+import pickle
 import warnings
 import numpy as np
 import os.path as osp
@@ -128,7 +129,8 @@ def test(cfg):
             video_preds.append((score, target))
 
 
-    for score, target in video_preds:
+    for idx, res in enumerate(video_preds):
+        score, target = res
         result_det = compute_result["perpoint"](
             cfg,
             target,
@@ -138,6 +140,16 @@ def test(cfg):
         if result_det["mp_mAP"] == -1.0:
             continue
         results.append(result_det["mp_mAP"])
+        toSave = {
+            "pred": score,
+            "target": target,
+            "result": result_det["mp_mAP"]
+        }
+        output_path = os.path.join(cfg.OUTPUT_DIR, "test_results")
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        with open(os.path.join(output_path, f"{idx}.pkl"), "wb") as f:
+            pickle.dump(toSave, f)
 
     results = np.mean(np.array(results))
     print(f"Mean Average Precision: {results:.5f}")
