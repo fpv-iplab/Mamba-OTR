@@ -223,7 +223,7 @@ class FocalLoss(nn.Module):
 
 
     def __sliding_window(self, p: torch.Tensor) -> torch.Tensor:
-        _, seq_len = p.shape
+        _, seq_len, _ = p.shape
         penalty = torch.zeros_like(p)
 
         for t in range(seq_len):
