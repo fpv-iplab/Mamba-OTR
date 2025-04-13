@@ -131,6 +131,8 @@ def test(cfg):
 
     for idx, res in enumerate(video_preds):
         score, target = res
+        score = np.array(score)
+        target = np.array(target)
         result_det = compute_result["perpoint"](
             cfg,
             target,
