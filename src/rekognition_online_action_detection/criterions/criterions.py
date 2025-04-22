@@ -218,7 +218,7 @@ class FocalLoss(nn.Module):
 
 
     def __entropy(self, p: torch.Tensor) -> torch.Tensor:
-        h = -torch.sum(p * torch.log(p + 1e-6), dim=1)
+        h = -torch.sum(p * torch.log(p + 1e-6), dim=0)
         return h.mean()
 
 
