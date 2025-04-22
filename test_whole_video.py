@@ -129,29 +129,24 @@ def test(cfg):
             video_preds.append((score, target))
 
 
-    for idx, res in enumerate(video_preds):
+    all_scores = []
+    all_targets = []
+    for _, res in enumerate(video_preds):
         score, target = res
-        score = np.array(score)
-        target = np.array(target)
-        result_det = compute_result["perpoint"](
-            cfg,
-            target,
-            score,
-            class_names = cfg.DATA.VERB_NAMES
-        )
-        if result_det["mp_mAP"] == -1.0:
-            continue
-        results.append(result_det["mp_mAP"])
-        toSave = {
-            "pred": score,
-            "target": target,
-            "result": result_det["mp_mAP"]
-        }
-        output_path = os.path.join(cfg.OUTPUT_DIR, "test_results")
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
-        with open(os.path.join(output_path, f"{idx}.pkl"), "wb") as f:
-            pickle.dump(toSave, f)
+        all_scores.append(np.array(score))
+        all_targets.append(np.array(target))
+
+    all_scores = np.concatenate(all_scores, axis=0)
+    all_targets = np.concatenate(all_targets, axis=0)
+
+    result_det = compute_result["perpoint"](
+        cfg,
+        all_targets,
+        all_scores,
+        class_names=cfg.DATA.VERB_NAMES
+    )
+    
+    print(f"Mean Average Precision: {result_det['mp_mAP']:.5f}")
 
     results = np.mean(np.array(results))
     print(f"Mean Average Precision: {results:.5f}")
