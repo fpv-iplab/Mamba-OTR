@@ -150,6 +150,7 @@ def test(cfg):
 
     perframe_time = [time / length for time, length in zip(times, video_length)]
     print(f"Mean Time per frame: {np.mean(np.array(perframe_time)):.5f}")
+    print(f"Mean Time per video: {np.mean(np.array(times)):.5f}")
 
     fps = [length / time for time, length in zip(times, video_length)]
     print(f"Mean FPS: {np.mean(np.array(fps)):.5f}")
