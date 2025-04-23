@@ -148,9 +148,8 @@ def test(cfg):
     
     print(f"Mean Average Precision: {result_det['mp_mAP']:.5f}")
 
-    results = np.mean(np.array(results))
-    print(f"Mean Average Precision: {results:.5f}")
-    print(f"Mean Time: {np.mean(np.array(times)):.5f}")
+    perframe_time = [time / length for time, length in zip(times, video_length)]
+    print(f"Mean Time per frame: {np.mean(np.array(perframe_time)):.5f}")
 
     fps = [length / time for time, length in zip(times, video_length)]
     print(f"Mean FPS: {np.mean(np.array(fps)):.5f}")
