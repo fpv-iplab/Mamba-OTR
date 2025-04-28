@@ -121,7 +121,7 @@ def test(cfg):
             end = time.time()
             times.append(end - start)
 
-            score, _, _ = score
+            _, score, _ = score # support for both verb-only and action prediction models. (The script evaluates only verbs)
             score = score.softmax(dim=-1).cpu().numpy()
 
             score = score.squeeze(0)
