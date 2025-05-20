@@ -3,24 +3,27 @@ DATA:
   CLIP_MIXUP_RATE: 0.5
   CLIP_MIXUP_SAMPLE: 'uniform'
   EK_EXT_PATH: 'external/rulstm/RULSTM/data/ek100/'
-  TK_ONLY: False
+  TK_ONLY: True
 INPUT:
+  # MODALITY: 'visual' # RGB Only
   MODALITY: 'twostream'
-  VISUAL_FEATURE: 'rgb_kinetics_bninception'
-  MOTION_FEATURE: 'flow_kinetics_bninception'
-  OBJECT_FEATURE: 'flow_kinetics_bninception' # not used
+  VISUAL_FEATURE: 'RGB'
+  MOTION_FEATURE: 'FLOW'
+  OBJECT_FEATURE: 'FLOW' # not used
   TARGET_PERFRAME: 'target_end_perframe'
+OUTPUT:
+  MODALITY: 'verb'
 MODEL:
   MODEL_NAME: 'LSTR'
   FEATURE_HEAD:
     LINEAR_ENABLED: True
     LINEAR_OUT_FEATURES: 2048
   LSTR:
-    MAMBA_LAYER: 2
+    MAMBA_LAYER: 0
     NUM_HEADS: 8
     DIM_FEEDFORWARD: 2048
     DROPOUT: 0.1
-    DROPOUT_CLS: 0.8
+    DROPOUT_CLS: 0.5
     ACTIVATION: 'relu'
     LONG_MEMORY_SECONDS: 0
     LONG_MEMORY_SAMPLE_RATE: 1
@@ -36,8 +39,8 @@ MODEL:
     LOSS_WEIGHT_N: 1.
     FUSION_WEIGHT_V: 1.
     FUSION_WEIGHT_N: 1.
-  CRITERIONS: [['MCE_EQL', {'anno_path': 'external/rulstm/RULSTM/data/ek100/'}], ['MCE', {}]]
-  FRAME_DELTA: 1
+  CRITERIONS: [['FOCAL', {"regularization": "fixed_window", "reg_lambda": 0.01, "window_size": 4}]]
+  FRAME_DELTA: 0
 DATA_LOADER:
   BATCH_SIZE: 32
   NUM_WORKERS: 8
