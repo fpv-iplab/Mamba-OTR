@@ -58,9 +58,18 @@ python test_net.py --config_file <path_to_config_file> --gpu <gpu_id> MODEL.CHEC
 If you use this code or model, please cite:
 ```
 
-[Placeholder for BibTeX or citation format]
+@article{catinello863online,
+  title={Online Detection of End of Take and Release Actions from Egocentric Videos},
+  author={Catinello, Alessandro Sebastiano and Farinella, Giovanni Maria and Furnari, Antonino},
+  journal={Proceedings Copyright},
+  volume={863},
+  pages={870}
+}
+
+[Placeholder for ICIAP Bibtex citation]
 
 ```
+
 
 ## License
 
