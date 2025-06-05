@@ -19,7 +19,7 @@ MODEL:
     LINEAR_ENABLED: True
     LINEAR_OUT_FEATURES: 2048
   LSTR:
-    MAMBA_LAYER: 2
+    MAMBA_LAYER: 3
     NUM_HEADS: 8
     DIM_FEEDFORWARD: 2048
     DROPOUT: 0.1
@@ -28,7 +28,7 @@ MODEL:
     LONG_MEMORY_SECONDS: 0
     LONG_MEMORY_SAMPLE_RATE: 1
     LONG_MEMORY_INCLUDE_WORK: False
-    WORK_MEMORY_SECONDS: 1
+    WORK_MEMORY_SECONDS: 5
     WORK_MEMORY_SAMPLE_RATE: 1
     ENC_MODULE: [
       [16, 1, True], [16, 2, True]
@@ -39,7 +39,7 @@ MODEL:
     LOSS_WEIGHT_N: 1.
     FUSION_WEIGHT_V: 1.
     FUSION_WEIGHT_N: 1.
-  CRITERIONS: [['FOCAL', {"regularization": "fixed_window", "reg_lambda": 0.01, "window_size": 40}]]
+  CRITERIONS: [['FOCAL', {"regularization": "fixed_window", "reg_lambda": 0.01, "window_size": 4}]]
   FRAME_DELTA: 0
 DATA_LOADER:
   BATCH_SIZE: 32
