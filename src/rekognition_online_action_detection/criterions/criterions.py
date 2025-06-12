@@ -258,6 +258,7 @@ class FocalLoss(nn.Module):
     def forward(self, 
         inputs: torch.Tensor,
         targets: torch.Tensor,
+        pos_weight: torch.Tensor = None,
     ) -> torch.Tensor:
         """
         Loss used in RetinaNet for dense detection: https://arxiv.org/abs/1708.02002.
@@ -294,7 +295,7 @@ class FocalLoss(nn.Module):
             targets = origin_targets[:, -1, :].contiguous()
 
         p = torch.sigmoid(inputs)
-        ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
+        ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none", pos_weight=pos_weight)
         p_t = p * targets + (1 - p) * (1 - targets)
 
         h = 0
