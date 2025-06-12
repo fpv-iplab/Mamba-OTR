@@ -447,7 +447,7 @@
         ]
     },
     "EK100": {
-        "data_root": "data/EK100/30fps",
+        "data_root": "data/EK100/4fps",
         "class_names": [
             "Background",
             "take tap",
