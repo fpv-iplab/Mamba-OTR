@@ -12,7 +12,7 @@ INPUT:
   OBJECT_FEATURE: 'FLOW' # not used
   TARGET_PERFRAME: 'target_end_perframe'
 OUTPUT:
-  MODALITY: 'action'
+  MODALITY: 'verb'
 MODEL:
   MODEL_NAME: 'LSTR'
   FEATURE_HEAD:
