@@ -95,7 +95,12 @@ def do_perframe_det_train(cfg,
                         if cfg.DATA.DATA_NAME == "EK100" and cfg.OUTPUT.MODALITY == "action":
                             det_loss = criterion["MCE_EQL"](det_score, det_target)
                         else:
-                            det_loss = criterion[loss_names[0]](det_score, det_target)
+                            B, T, _ = det_target.shape
+                            positives = torch.sum(det_target, dim=(0, 1))
+                            negative = (B * T) - positives
+                            pos_weight_per_class = negative / (positives + 1e-6)
+                            
+                            det_loss = criterion[loss_names[0]](det_score, det_target, pos_weight_per_class)
                         det_losses[phase] += det_loss.item() * batch_size
 
                         if cfg.MODEL.LSTR.V_N_CLASSIFIER:
