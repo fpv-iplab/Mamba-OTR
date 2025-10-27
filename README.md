@@ -49,10 +49,6 @@ python test_net.py --config_file <path_to_config_file> --gpu <gpu_id> MODEL.CHEC
 ```
 
 
-## Results
-
-[Placeholder for Tables from the paper]
-
 ## Citations
 
 If you use this code or model, please cite:
@@ -66,7 +62,12 @@ If you use this code or model, please cite:
   pages={870}
 }
 
-[Placeholder for ICIAP Bibtex citation]
+@article{catinello2025mamba,
+  title={Mamba-OTR: a Mamba-based Solution for Online Take and Release Detection from Untrimmed Egocentric Video},
+  author={Catinello, Alessandro Sebastiano and Farinella, Giovanni Maria and Furnari, Antonino},
+  journal={arXiv preprint arXiv:2507.16342},
+  year={2025}
+}
 
 ```
 
