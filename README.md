@@ -53,20 +53,18 @@ python test_net.py --config_file <path_to_config_file> --gpu <gpu_id> MODEL.CHEC
 
 If you use this code or model, please cite:
 ```
-
-@article{catinello863online,
-  title={Online Detection of End of Take and Release Actions from Egocentric Videos},
-  author={Catinello, Alessandro Sebastiano and Farinella, Giovanni Maria and Furnari, Antonino},
-  journal={Proceedings Copyright},
-  volume={863},
-  pages={870}
+@inproceedings{catinello2025online,
+  author = { Alessandro Sebastiano Catinello and Giovanni Maria Farinella and Antonino Furnari },
+  title = {  Online Detection of End of Take and Release actions from Egocentric Videos },
+  booktitle = {  International Conference on Computer Vision Theory and Applications (VISAPP)   },
+  year = { 2025 },
 }
 
-@article{catinello2025mamba,
-  title={Mamba-OTR: a Mamba-based Solution for Online Take and Release Detection from Untrimmed Egocentric Video},
-  author={Catinello, Alessandro Sebastiano and Farinella, Giovanni Maria and Furnari, Antonino},
-  journal={arXiv preprint arXiv:2507.16342},
-  year={2025}
+@inproceedings{Catinello2025MambaOTR,
+  year = { 2025 },
+  booktitle = { Proceedings of the 23rd International Conference on Image Analysis and Processing (ICIAP) },
+  title = { Mamba-OTR: a Mamba-based Solution for Online Take and Release Detection from Untrimmed Egocentric Video },
+  author = { Alessandro Sebastiano Catinello and Giovanni Maria Farinella and Antonino Furnari },
 }
 
 ```
