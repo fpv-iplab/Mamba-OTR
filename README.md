@@ -24,10 +24,7 @@ Please, refer to the paper for more technical details. The following sections do
     conda create -n mamba_otr python=3.11.9
     conda activate mamba_otr
     ```
-*   **Requirements:** Install dependencies using `requirements.txt`.
-    ```bash
-    pip install -r requirements.txt
-    ```
+*   **Requirements:** Please follow instructions inside the `external/video_mamba_suite` directory to configure the library and install dependencies.
 
 
 ## Usage
